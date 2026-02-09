@@ -1,0 +1,78 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  
+}
+
+model User {
+  id          String       @id @default(uuid())
+  name        String
+  email       String       @unique
+  password    String
+  roleId      String
+  role        Role         @relation(fields: [roleId], references: [id])
+  enrollments Enrollment[]
+  progress    Progress[]
+  courses     Course[]     @relation("AdminCourses")
+  createdAt   DateTime     @default(now())
+}
+
+model Role {
+  id    String @id @default(uuid())
+  name  String @unique
+  users User[]
+}
+
+model Course {
+  id          String       @id @default(uuid())
+  title       String
+  description String
+  createdById String
+  createdBy   User         @relation("AdminCourses", fields: [createdById], references: [id])
+  lessons     Lesson[]
+  enrollments Enrollment[]
+  createdAt   DateTime     @default(now())
+}
+
+model Lesson {
+  id        String     @id @default(uuid())
+  title     String
+  content   String
+  order     Int
+  courseId  String
+  course    Course    @relation(fields: [courseId], references: [id])
+  progress  Progress[]
+}
+
+model Enrollment {
+  id        String   @id @default(uuid())
+  userId    String
+  courseId  String
+  user      User     @relation(fields: [userId], references: [id])
+  course    Course   @relation(fields: [courseId], references: [id])
+  enrolledAt DateTime @default(now())
+
+  @@unique([userId, courseId])
+}
+
+model Progress {
+  id         String   @id @default(uuid())
+  userId     String
+  lessonId   String
+  completed  Boolean  @default(false)
+  completedAt DateTime?
+  user       User     @relation(fields: [userId], references: [id])
+  lesson     Lesson   @relation(fields: [lessonId], references: [id])
+
+  @@unique([userId, lessonId])
+}
