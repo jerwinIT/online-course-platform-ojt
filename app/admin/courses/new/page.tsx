@@ -45,6 +45,7 @@ import {
   publishCourse,
   uploadCourseImage,
   createCategory,
+  deleteCategory,
   getCategories,
   type CourseFormData,
 } from "@/server/actions/course";
@@ -240,21 +241,33 @@ function SectionCard({
 }
 
 // ---------------------------------------------------------------------------
-// AddCategoryDialog - Dialog for creating new categories
+// ManageCategoryDialog - Dialog for adding and removing categories
 // ---------------------------------------------------------------------------
 
-function AddCategoryDialog({
+function ManageCategoryDialog({
+  categories,
+  selectedCategoryId,
   onCategoryAdded,
+  onCategoryDeleted,
 }: {
+  categories: Category[];
+  selectedCategoryId: string;
   onCategoryAdded: (category: Category) => void;
+  onCategoryDeleted: (categoryId: string) => void;
 }) {
   const [open, setOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState<"add" | "manage">("add");
+
+  // Add form state
   const [categoryName, setCategoryName] = useState("");
   const [categorySlug, setCategorySlug] = useState("");
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [isPending, startTransition] = useTransition();
+  const [addErrors, setAddErrors] = useState<Record<string, string>>({});
+  const [isAdding, startAddTransition] = useTransition();
 
-  // Auto-generate slug from name
+  // Delete state: tracks which category id is currently being deleted
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteErrors, setDeleteErrors] = useState<Record<string, string>>({});
+
   const handleNameChange = (name: string) => {
     setCategoryName(name);
     const slug = name
@@ -266,99 +279,239 @@ function AddCategoryDialog({
     setCategorySlug(slug);
   };
 
-  const handleSubmit = async () => {
-    setErrors({});
-
-    startTransition(async () => {
+  const handleAdd = () => {
+    setAddErrors({});
+    startAddTransition(async () => {
       const result = await createCategory(categoryName, categorySlug);
-
       if (result.success) {
         onCategoryAdded(result.category);
         setCategoryName("");
         setCategorySlug("");
-        setOpen(false);
+        // Switch to manage tab so the user sees the new entry
+        setActiveTab("manage");
       } else {
         const errMap: Record<string, string> = {};
         Object.entries(result.errors).forEach(([key, messages]) => {
           errMap[key] = messages[0];
         });
-        setErrors(errMap);
+        setAddErrors(errMap);
       }
     });
   };
 
+  const handleDelete = async (id: string) => {
+    setDeleteErrors({});
+    setDeletingId(id);
+    const result = await deleteCategory(id);
+    setDeletingId(null);
+    if (result.success) {
+      onCategoryDeleted(id);
+    } else {
+      setDeleteErrors((prev) => ({ ...prev, [id]: result.error }));
+    }
+  };
+
+  const handleOpenChange = (next: boolean) => {
+    setOpen(next);
+    if (!next) {
+      // Reset form when closing
+      setCategoryName("");
+      setCategorySlug("");
+      setAddErrors({});
+      setDeleteErrors({});
+      setActiveTab("add");
+    }
+  };
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button type="button" variant="outline" size="sm" className="w-full">
+        <Button type="button" variant="outline" size="sm" className="shrink-0">
           <Plus className="w-4 h-4 mr-2" />
-          Add New Category
+          Manage Categories
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[460px]">
         <DialogHeader>
-          <DialogTitle>Add New Category</DialogTitle>
+          <DialogTitle>Manage Categories</DialogTitle>
           <DialogDescription>
-            Create a new course category. The slug will be auto-generated from
-            the name.
+            Add new categories or remove existing ones.
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
-          <div className="grid gap-2">
-            <Label htmlFor="category-name">Category Name</Label>
-            <Input
-              id="category-name"
-              placeholder="e.g., Web Development"
-              value={categoryName}
-              onChange={(e) => handleNameChange(e.target.value)}
-              disabled={isPending}
-            />
-            {errors.name && (
-              <p className="text-xs text-destructive">{errors.name}</p>
+
+        {/* Tab switcher */}
+        <div className="flex border-b border-border mb-2">
+          <button
+            type="button"
+            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === "add"
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+            onClick={() => setActiveTab("add")}
+          >
+            Add New
+          </button>
+          <button
+            type="button"
+            className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+              activeTab === "manage"
+                ? "border-primary text-primary"
+                : "border-transparent text-muted-foreground hover:text-foreground"
+            }`}
+            onClick={() => setActiveTab("manage")}
+          >
+            All Categories
+            {categories.length > 0 && (
+              <span className="ml-1.5 text-xs bg-muted text-muted-foreground rounded-full px-1.5 py-0.5">
+                {categories.length}
+              </span>
             )}
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="category-slug">Slug</Label>
-            <Input
-              id="category-slug"
-              placeholder="e.g., web-development"
-              value={categorySlug}
-              onChange={(e) => setCategorySlug(e.target.value)}
-              disabled={isPending}
-            />
-            {errors.slug && (
-              <p className="text-xs text-destructive">{errors.slug}</p>
-            )}
-            <p className="text-xs text-muted-foreground">
-              Used in URLs. Only lowercase letters, numbers, and hyphens.
-            </p>
-          </div>
-          {errors._form && (
-            <p className="text-xs text-destructive">{errors._form}</p>
-          )}
+          </button>
         </div>
-        <DialogFooter>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => setOpen(false)}
-            disabled={isPending}
-          >
-            Cancel
-          </Button>
-          <Button
-            type="button"
-            onClick={handleSubmit}
-            disabled={isPending || !categoryName.trim() || !categorySlug.trim()}
-          >
-            {isPending ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            ) : (
-              <Plus className="w-4 h-4 mr-2" />
+
+        {/* ── Add tab ── */}
+        {activeTab === "add" && (
+          <div className="grid gap-4 py-2">
+            <div className="grid gap-2">
+              <Label htmlFor="category-name">Category Name</Label>
+              <Input
+                id="category-name"
+                placeholder="e.g., Web Development"
+                value={categoryName}
+                onChange={(e) => handleNameChange(e.target.value)}
+                disabled={isAdding}
+              />
+              {addErrors.name && (
+                <p className="text-xs text-destructive">{addErrors.name}</p>
+              )}
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="category-slug">Slug</Label>
+              <Input
+                id="category-slug"
+                placeholder="e.g., web-development"
+                value={categorySlug}
+                onChange={(e) => setCategorySlug(e.target.value)}
+                disabled={isAdding}
+              />
+              {addErrors.slug && (
+                <p className="text-xs text-destructive">{addErrors.slug}</p>
+              )}
+              <p className="text-xs text-muted-foreground">
+                Used in URLs. Only lowercase letters, numbers, and hyphens.
+              </p>
+            </div>
+            {addErrors._form && (
+              <p className="text-xs text-destructive">{addErrors._form}</p>
             )}
-            Add Category
-          </Button>
-        </DialogFooter>
+            <DialogFooter className="pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => handleOpenChange(false)}
+                disabled={isAdding}
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                onClick={handleAdd}
+                disabled={
+                  isAdding || !categoryName.trim() || !categorySlug.trim()
+                }
+              >
+                {isAdding ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <Plus className="w-4 h-4 mr-2" />
+                )}
+                Add Category
+              </Button>
+            </DialogFooter>
+          </div>
+        )}
+
+        {/* ── Manage tab ── */}
+        {activeTab === "manage" && (
+          <div className="py-2 space-y-3">
+            {categories.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-6">
+                No categories yet. Switch to &ldquo;Add New&rdquo; to create
+                one.
+              </p>
+            ) : (
+              <ul className="space-y-2 max-h-64 overflow-y-auto pr-1">
+                {categories.map((cat) => {
+                  const isSelected = cat.id === selectedCategoryId;
+                  const isBeingDeleted = deletingId === cat.id;
+                  const deleteError = deleteErrors[cat.id];
+
+                  return (
+                    <li key={cat.id} className="space-y-1">
+                      <div
+                        className={`flex items-center gap-3 px-3 py-2 rounded-md border ${
+                          isSelected
+                            ? "border-primary/40 bg-primary/5"
+                            : "border-border bg-background"
+                        }`}
+                      >
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">
+                            {cat.name}
+                          </p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            /{cat.slug}
+                          </p>
+                        </div>
+                        {isSelected && (
+                          <span className="text-xs text-primary font-medium shrink-0">
+                            In use
+                          </span>
+                        )}
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10 disabled:opacity-40"
+                          disabled={
+                            isSelected || isBeingDeleted || !!deletingId
+                          }
+                          title={
+                            isSelected
+                              ? "Cannot delete the currently selected category"
+                              : "Delete category"
+                          }
+                          onClick={() => handleDelete(cat.id)}
+                        >
+                          {isBeingDeleted ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="w-4 h-4" />
+                          )}
+                        </Button>
+                      </div>
+                      {deleteError && (
+                        <p className="text-xs text-destructive px-3">
+                          {deleteError}
+                        </p>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+            <DialogFooter className="pt-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => handleOpenChange(false)}
+              >
+                Close
+              </Button>
+            </DialogFooter>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
@@ -533,17 +686,23 @@ export default function CreateCoursePage() {
 
       const pubRes = await publishCourse(res.courseId);
       if (pubRes.success) {
-        router.push(`/courses/${res.courseId}`);
+        router.push(`/admin?tab=courses`);
       } else {
         setFormErrors(pubRes.errors);
       }
     });
   };
 
-  // Add category handler
+  // Category handlers
   const handleCategoryAdded = (category: Category) => {
-    setCategories([...categories, category]);
+    setCategories((prev) => [...prev, category]);
     setCategoryId(category.id);
+  };
+
+  const handleCategoryDeleted = (deletedId: string) => {
+    setCategories((prev) => prev.filter((c) => c.id !== deletedId));
+    // Clear selection if the deleted category was the selected one
+    setCategoryId((prev) => (prev === deletedId ? "" : prev));
   };
 
   // ---------------------------------------------------------------------------
@@ -675,7 +834,7 @@ export default function CreateCoursePage() {
                     )}
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
+                  <div>
                     <div className="space-y-2">
                       <label className="text-sm font-medium text-foreground">
                         Total Duration (hours){" "}
@@ -694,16 +853,17 @@ export default function CreateCoursePage() {
                         </p>
                       )}
                     </div>
-
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-foreground">
-                        Category <span className="text-destructive">*</span>
-                      </label>
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-foreground">
+                      Category <span className="text-destructive">*</span>
+                    </label>
+                    <div className="flex items-center gap-2">
                       <Select value={categoryId} onValueChange={setCategoryId}>
-                        <SelectTrigger>
+                        <SelectTrigger className="flex-1">
                           <SelectValue placeholder="Select a category" />
                         </SelectTrigger>
-                        <SelectContent>
+                        <SelectContent position="popper">
                           <SelectGroup>
                             {loadingCategories ? (
                               <SelectItem value="loading" disabled>
@@ -723,17 +883,18 @@ export default function CreateCoursePage() {
                           </SelectGroup>
                         </SelectContent>
                       </Select>
-                      {formErrors.categoryId && (
-                        <p className="text-xs text-destructive">
-                          {formErrors.categoryId[0]}
-                        </p>
-                      )}
+                      <ManageCategoryDialog
+                        categories={categories}
+                        selectedCategoryId={categoryId}
+                        onCategoryAdded={handleCategoryAdded}
+                        onCategoryDeleted={handleCategoryDeleted}
+                      />
                     </div>
-                  </div>
-
-                  {/* Add Category Button */}
-                  <div className="pt-2">
-                    <AddCategoryDialog onCategoryAdded={handleCategoryAdded} />
+                    {formErrors.categoryId && (
+                      <p className="text-xs text-destructive">
+                        {formErrors.categoryId[0]}
+                      </p>
+                    )}
                   </div>
 
                   <div className="space-y-2">

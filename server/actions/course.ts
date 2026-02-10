@@ -172,6 +172,47 @@ export async function getCategories(): Promise<GetCategoriesResult> {
 }
 
 // ---------------------------------------------------------------------------
+// deleteCategory – removes a category by id (only if no courses reference it)
+// ---------------------------------------------------------------------------
+
+export type DeleteCategoryResult =
+  | { success: true }
+  | { success: false; error: string };
+
+export async function deleteCategory(
+  categoryId: string,
+): Promise<DeleteCategoryResult> {
+  if (!categoryId) {
+    return { success: false, error: "Category ID is required." };
+  }
+
+  try {
+    // Guard: refuse if any course still references this category
+    const courseCount = await prisma.course.count({
+      where: { categoryId },
+    });
+
+    if (courseCount > 0) {
+      return {
+        success: false,
+        error: `Cannot delete: ${courseCount} course${courseCount === 1 ? "" : "s"} still use this category.`,
+      };
+    }
+
+    await prisma.category.delete({ where: { id: categoryId } });
+
+    revalidatePath("/admin/courses/create");
+    return { success: true };
+  } catch (error) {
+    console.error("[deleteCategory] DB error:", error);
+    return {
+      success: false,
+      error: "Something went wrong deleting the category. Please try again.",
+    };
+  }
+}
+
+// ---------------------------------------------------------------------------
 // createCourse – persists everything in one transaction
 // ---------------------------------------------------------------------------
 
