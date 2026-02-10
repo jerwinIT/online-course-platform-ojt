@@ -21,6 +21,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import {
   ArrowLeft,
   Upload,
   Plus,
@@ -34,6 +44,8 @@ import {
   createCourse,
   publishCourse,
   uploadCourseImage,
+  createCategory,
+  getCategories,
   type CourseFormData,
 } from "@/server/actions/course";
 import { useRouter } from "next/navigation";
@@ -228,217 +240,363 @@ function SectionCard({
 }
 
 // ---------------------------------------------------------------------------
-// Main page
+// AddCategoryDialog - Dialog for creating new categories
 // ---------------------------------------------------------------------------
 
-export default function CourseCreationPage() {
+function AddCategoryDialog({
+  onCategoryAdded,
+}: {
+  onCategoryAdded: (category: Category) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [categoryName, setCategoryName] = useState("");
+  const [categorySlug, setCategorySlug] = useState("");
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isPending, startTransition] = useTransition();
+
+  // Auto-generate slug from name
+  const handleNameChange = (name: string) => {
+    setCategoryName(name);
+    const slug = name
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9\s-]/g, "")
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-");
+    setCategorySlug(slug);
+  };
+
+  const handleSubmit = async () => {
+    setErrors({});
+
+    startTransition(async () => {
+      const result = await createCategory(categoryName, categorySlug);
+
+      if (result.success) {
+        onCategoryAdded(result.category);
+        setCategoryName("");
+        setCategorySlug("");
+        setOpen(false);
+      } else {
+        const errMap: Record<string, string> = {};
+        Object.entries(result.errors).forEach(([key, messages]) => {
+          errMap[key] = messages[0];
+        });
+        setErrors(errMap);
+      }
+    });
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button type="button" variant="outline" size="sm" className="w-full">
+          <Plus className="w-4 h-4 mr-2" />
+          Add New Category
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Add New Category</DialogTitle>
+          <DialogDescription>
+            Create a new course category. The slug will be auto-generated from
+            the name.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="grid gap-2">
+            <Label htmlFor="category-name">Category Name</Label>
+            <Input
+              id="category-name"
+              placeholder="e.g., Web Development"
+              value={categoryName}
+              onChange={(e) => handleNameChange(e.target.value)}
+              disabled={isPending}
+            />
+            {errors.name && (
+              <p className="text-xs text-destructive">{errors.name}</p>
+            )}
+          </div>
+          <div className="grid gap-2">
+            <Label htmlFor="category-slug">Slug</Label>
+            <Input
+              id="category-slug"
+              placeholder="e.g., web-development"
+              value={categorySlug}
+              onChange={(e) => setCategorySlug(e.target.value)}
+              disabled={isPending}
+            />
+            {errors.slug && (
+              <p className="text-xs text-destructive">{errors.slug}</p>
+            )}
+            <p className="text-xs text-muted-foreground">
+              Used in URLs. Only lowercase letters, numbers, and hyphens.
+            </p>
+          </div>
+          {errors._form && (
+            <p className="text-xs text-destructive">{errors._form}</p>
+          )}
+        </div>
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setOpen(false)}
+            disabled={isPending}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            onClick={handleSubmit}
+            disabled={isPending || !categoryName.trim() || !categorySlug.trim()}
+          >
+            {isPending ? (
+              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+            ) : (
+              <Plus className="w-4 h-4 mr-2" />
+            )}
+            Add Category
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// CreateCoursePage — the main form
+// ---------------------------------------------------------------------------
+
+export default function CreateCoursePage() {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
-  // ── Basic Info ──────────────────────────────────────────────────────────
+  // Active tab
+  const [activeTab, setActiveTab] = useState("basic");
+
+  // Form fields
   const [title, setTitle] = useState("");
   const [subtitle, setSubtitle] = useState("");
-  const [imageUrl, setImageUrl] = useState<string | null>(null);
-  const [imageUploading, setImageUploading] = useState(false);
-  const [imageError, setImageError] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // ── Details ─────────────────────────────────────────────────────────────
   const [description, setDescription] = useState("");
   const [duration, setDuration] = useState("");
-  const [categoryId, setCategoryId] = useState<string>("");
+  const [categoryId, setCategoryId] = useState("");
+  const [sections, setSections] = useState<Section[]>([]);
+  const [imageUrl, setImageUrl] = useState("");
+  const [uploadingImage, setUploadingImage] = useState(false);
+
+  // Load categories
   const [categories, setCategories] = useState<Category[]>([]);
-  const [categoriesLoading, setCategoriesLoading] = useState(true);
+  const [loadingCategories, setLoadingCategories] = useState(true);
 
-  // ── Curriculum ──────────────────────────────────────────────────────────
-  const [sections, setSections] = useState<Section[]>([
-    { _id: 1, title: "", lessons: [] },
-  ]);
+  useEffect(() => {
+    const loadCategories = async () => {
+      const result = await getCategories();
+      if (result.success) {
+        setCategories(result.data);
+      }
+      setLoadingCategories(false);
+    };
+    loadCategories();
+  }, []);
 
-  // ── Publish ─────────────────────────────────────────────────────────────
+  // Errors
+  const [formErrors, setFormErrors] = useState<Record<string, string[]>>({});
+
+  // Publish checkboxes
   const [checks, setChecks] = useState({
     original: false,
     quality: false,
     guidelines: false,
   });
-  const [formErrors, setFormErrors] = useState<Record<string, string[]>>({});
-  const [savedCourseId, setSavedCourseId] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState("basic");
 
-  // ── Fetch categories on mount ───────────────────────────────────────────
-  useEffect(() => {
-    async function fetchCategories() {
-      try {
-        const response = await fetch("/api/categories");
-        if (response.ok) {
-          const data = await response.json();
-          setCategories(data);
-        }
-      } catch (error) {
-        console.error("Failed to fetch categories:", error);
-      } finally {
-        setCategoriesLoading(false);
-      }
-    }
-    fetchCategories();
-  }, []);
+  // Image upload ref
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // ── Image upload ─────────────────────────────────────────────────────────
-  const handleImageChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setImageError(null);
-    setImageUploading(true);
+  // ---------------------------------------------------------------------------
+  // Section CRUD
+  // ---------------------------------------------------------------------------
 
-    const fd = new FormData();
-    fd.append("image", file);
-
-    const result = await uploadCourseImage(fd);
-    setImageUploading(false);
-
-    if (result.success) {
-      setImageUrl(result.url);
-    } else {
-      setImageError(result.error);
-    }
-  };
-
-  // ── Section helpers ──────────────────────────────────────────────────────
   const addSection = () => {
-    setSections((prev) => [
-      ...prev,
-      { _id: Date.now(), title: "", lessons: [] },
-    ]);
+    const newSection: Section = {
+      _id: Date.now(),
+      title: "",
+      lessons: [],
+    };
+    setSections([...sections, newSection]);
   };
 
   const updateSection = (index: number, updated: Section) => {
-    setSections((prev) => prev.map((s, i) => (i === index ? updated : s)));
+    const updated_sections = sections.map((s, i) =>
+      i === index ? updated : s,
+    );
+    setSections(updated_sections);
   };
 
   const removeSection = (index: number) => {
-    setSections((prev) => prev.filter((_, i) => i !== index));
+    setSections(sections.filter((_, i) => i !== index));
   };
 
-  // ── Build CourseFormData ─────────────────────────────────────────────────
-  const buildFormData = (): CourseFormData => ({
-    title,
-    subtitle: subtitle || undefined,
-    image: imageUrl ?? undefined,
-    description,
-    duration: Number(duration),
-    categoryId,
-    sections: sections.map((section, sIdx) => ({
-      title: section.title,
-      order: sIdx,
-      lessons: section.lessons.map((lesson, lIdx) => ({
-        title: lesson.title,
-        content: lesson.content,
-        videoUrl: lesson.videoUrl || undefined,
-        duration: lesson.duration,
-        order: lIdx,
-      })),
-    })),
-  });
+  // ---------------------------------------------------------------------------
+  // Image upload
+  // ---------------------------------------------------------------------------
 
-  // ── Save as draft ────────────────────────────────────────────────────────
-  const handleSave = () => {
-    setFormErrors({});
-    startTransition(async () => {
-      const result = await createCourse(buildFormData());
+  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingImage(true);
+    const fd = new FormData();
+    fd.append("image", file);
+
+    try {
+      const result = await uploadCourseImage(fd);
       if (result.success) {
-        setSavedCourseId(result.courseId);
+        setImageUrl(result.url);
       } else {
-        setFormErrors(result.errors);
+        alert("Image upload failed: " + result.error);
       }
-    });
+    } catch (err) {
+      alert("Image upload error");
+      console.error(err);
+    } finally {
+      setUploadingImage(false);
+    }
   };
 
-  // ── Publish ──────────────────────────────────────────────────────────────
-  const handlePublish = () => {
+  // ---------------------------------------------------------------------------
+  // Handlers: save / publish
+  // ---------------------------------------------------------------------------
+
+  const handleSave = async () => {
     setFormErrors({});
 
-    if (!checks.original || !checks.quality || !checks.guidelines) {
-      setFormErrors({
-        _form: ["Please confirm all checkboxes before publishing."],
-      });
-      return;
-    }
+    const payload: CourseFormData = {
+      title,
+      subtitle,
+      image: imageUrl,
+      description,
+      duration: Number(duration) || 0,
+      categoryId,
+      sections: sections.map((sec, sIdx) => ({
+        title: sec.title,
+        order: sIdx,
+        lessons: sec.lessons.map((lesson, lIdx) => ({
+          title: lesson.title,
+          content: lesson.content,
+          videoUrl: lesson.videoUrl,
+          duration: lesson.duration,
+          order: lIdx,
+        })),
+      })),
+    };
 
     startTransition(async () => {
-      // Save first if not already saved
-      let courseId = savedCourseId;
-      if (!courseId) {
-        const saveResult = await createCourse(buildFormData());
-        if (!saveResult.success) {
-          setFormErrors(saveResult.errors);
-          return;
-        }
-        courseId = saveResult.courseId;
-        setSavedCourseId(courseId);
-      }
-
-      const publishResult = await publishCourse(courseId);
-      if (publishResult.success) {
-        router.push(`/courses/${courseId}`);
+      const res = await createCourse(payload);
+      if (res.success) {
+        router.push(`/admin/courses`);
       } else {
-        setFormErrors(publishResult.errors);
+        setFormErrors(res.errors);
       }
     });
   };
 
-  // ── Validation helpers (inline) ──────────────────────────────────────────
+  const handlePublish = async () => {
+    setFormErrors({});
+
+    const payload: CourseFormData = {
+      title,
+      subtitle,
+      image: imageUrl,
+      description,
+      duration: Number(duration) || 0,
+      categoryId,
+      sections: sections.map((sec, sIdx) => ({
+        title: sec.title,
+        order: sIdx,
+        lessons: sec.lessons.map((lesson, lIdx) => ({
+          title: lesson.title,
+          content: lesson.content,
+          videoUrl: lesson.videoUrl,
+          duration: lesson.duration,
+          order: lIdx,
+        })),
+      })),
+    };
+
+    startTransition(async () => {
+      const res = await createCourse(payload);
+      if (!res.success) {
+        setFormErrors(res.errors);
+        return;
+      }
+
+      const pubRes = await publishCourse(res.courseId);
+      if (pubRes.success) {
+        router.push(`/courses/${res.courseId}`);
+      } else {
+        setFormErrors(pubRes.errors);
+      }
+    });
+  };
+
+  // Add category handler
+  const handleCategoryAdded = (category: Category) => {
+    setCategories([...categories, category]);
+    setCategoryId(category.id);
+  };
+
+  // ---------------------------------------------------------------------------
+  // Validation helpers
+  // ---------------------------------------------------------------------------
+
   const basicComplete = title.trim().length > 0;
   const detailsComplete =
     description.trim().length > 0 &&
-    Number(duration) >= 1 &&
-    categoryId.trim().length > 0;
-  const curriculumComplete =
-    sections.length > 0 && sections.every((s) => s.title.trim().length > 0);
-
-  const globalErrors = formErrors._form;
+    Number(duration) > 0 &&
+    categoryId.length > 0;
+  const curriculumComplete = sections.every((s) => s.title.trim().length > 0);
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
-      <section className="bg-secondary border-b border-border px-4 py-6 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-4xl">
-          <Link
-            href="/admin"
-            className="inline-flex items-center gap-2 text-primary hover:underline mb-4"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Admin
-          </Link>
-          <h1 className="text-3xl sm:text-4xl font-bold text-foreground">
-            Create New Course
-          </h1>
+    <div className="min-h-screen bg-background text-foreground flex flex-col">
+      <section className="flex-1 container max-w-4xl mx-auto px-4 py-12">
+        <div className="mb-8 flex items-center justify-between">
+          <div>
+            <Link
+              href="/admin/courses"
+              className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1 mb-2"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Back to Courses
+            </Link>
+            <h1 className="text-3xl font-bold">Create New Course</h1>
+            <p className="text-muted-foreground mt-1">
+              Build your course step by step
+            </p>
+          </div>
         </div>
-      </section>
 
-      {/* Main Content */}
-      <section className="flex-1 px-4 py-12 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-4xl">
-          {/* Global errors */}
-          {globalErrors && globalErrors.length > 0 && (
-            <div className="mb-4 rounded-lg bg-destructive/10 border border-destructive/30 px-4 py-3">
-              {globalErrors.map((err) => (
-                <p key={err} className="text-sm text-destructive">
-                  {err}
-                </p>
-              ))}
-            </div>
-          )}
-
-          <Tabs
-            value={activeTab}
-            onValueChange={setActiveTab}
-            className="space-y-6"
-          >
+        <div className="space-y-6">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
             <TabsList className="grid w-full grid-cols-4">
-              <TabsTrigger value="basic">Basic Info</TabsTrigger>
-              <TabsTrigger value="details">Details</TabsTrigger>
-              <TabsTrigger value="curriculum">Curriculum</TabsTrigger>
-              <TabsTrigger value="publish">Publish</TabsTrigger>
+              <TabsTrigger value="basic">Basic</TabsTrigger>
+              <TabsTrigger value="details" disabled={!basicComplete}>
+                Details
+              </TabsTrigger>
+              <TabsTrigger
+                value="curriculum"
+                disabled={!basicComplete || !detailsComplete}
+              >
+                Curriculum
+              </TabsTrigger>
+              <TabsTrigger
+                value="publish"
+                disabled={
+                  !basicComplete || !detailsComplete || !curriculumComplete
+                }
+              >
+                Publish
+              </TabsTrigger>
             </TabsList>
 
             {/* ── Basic Info Tab ──────────────────────────────────────── */}
@@ -447,17 +605,16 @@ export default function CourseCreationPage() {
                 <CardHeader>
                   <CardTitle>Basic Information</CardTitle>
                   <CardDescription>
-                    Add the basic details about your course
+                    Start with the essentials — course title and subtitle
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6">
-                  {/* Title */}
+                <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-foreground">
-                      Course Title *
+                      Course Title <span className="text-destructive">*</span>
                     </label>
                     <Input
-                      placeholder="Enter course title"
+                      placeholder="e.g., Complete React Developer Course"
                       value={title}
                       onChange={(e) => setTitle(e.target.value)}
                     />
@@ -468,58 +625,15 @@ export default function CourseCreationPage() {
                     )}
                   </div>
 
-                  {/* Subtitle */}
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-foreground">
-                      Course Subtitle
+                      Subtitle (optional)
                     </label>
                     <Input
-                      placeholder="Brief description of what the course covers"
+                      placeholder="A short tagline for your course"
                       value={subtitle}
                       onChange={(e) => setSubtitle(e.target.value)}
                     />
-                  </div>
-
-                  {/* Image */}
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-foreground">
-                      Course Image
-                    </label>
-                    <input
-                      ref={fileInputRef}
-                      type="file"
-                      accept="image/png,image/jpeg,image/gif,image/webp"
-                      className="hidden"
-                      onChange={handleImageChange}
-                    />
-                    <div
-                      className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary transition cursor-pointer relative"
-                      onClick={() => fileInputRef.current?.click()}
-                    >
-                      {imageUploading ? (
-                        <Loader2 className="w-8 h-8 mx-auto text-muted-foreground animate-spin mb-2" />
-                      ) : imageUrl ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={imageUrl}
-                          alt="Course cover"
-                          className="mx-auto max-h-40 rounded object-cover"
-                        />
-                      ) : (
-                        <Upload className="w-8 h-8 mx-auto text-muted-foreground mb-2" />
-                      )}
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {imageUrl
-                          ? "Click to replace image"
-                          : "Click to upload or drag and drop"}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        PNG, JPG, GIF up to 10MB
-                      </p>
-                    </div>
-                    {imageError && (
-                      <p className="text-xs text-destructive">{imageError}</p>
-                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -540,18 +654,17 @@ export default function CourseCreationPage() {
                 <CardHeader>
                   <CardTitle>Course Details</CardTitle>
                   <CardDescription>
-                    Provide detailed information about your course
+                    Provide a description, duration, category, and cover image
                   </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-6">
-                  {/* Description */}
+                <CardContent className="space-y-4">
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-foreground">
-                      Description *
+                      Description <span className="text-destructive">*</span>
                     </label>
                     <textarea
-                      placeholder="Enter a detailed course description"
-                      className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground min-h-32 resize-none"
+                      className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground text-sm min-h-32 resize-none"
+                      placeholder="What will students learn in this course?"
                       value={description}
                       onChange={(e) => setDescription(e.target.value)}
                     />
@@ -562,55 +675,99 @@ export default function CourseCreationPage() {
                     )}
                   </div>
 
-                  {/* Duration */}
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-foreground">
-                      Duration (hours) *
-                    </label>
-                    <Input
-                      type="number"
-                      placeholder="24"
-                      min={1}
-                      value={duration}
-                      onChange={(e) => setDuration(e.target.value)}
-                    />
-                    {formErrors.duration && (
-                      <p className="text-xs text-destructive">
-                        {formErrors.duration[0]}
-                      </p>
-                    )}
-                  </div>
-                  {/* Category */}
-                  <div className="space-y-2">
-                    <label className="text-sm font-medium text-foreground">
-                      Category *
-                    </label>
-                    {categoriesLoading ? (
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <Loader2 className="w-4 h-4 animate-spin" />
-                        Loading categories...
-                      </div>
-                    ) : (
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-foreground">
+                        Total Duration (hours){" "}
+                        <span className="text-destructive">*</span>
+                      </label>
+                      <Input
+                        type="number"
+                        placeholder="e.g., 12"
+                        min={1}
+                        value={duration}
+                        onChange={(e) => setDuration(e.target.value)}
+                      />
+                      {formErrors.duration && (
+                        <p className="text-xs text-destructive">
+                          {formErrors.duration[0]}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <label className="text-sm font-medium text-foreground">
+                        Category <span className="text-destructive">*</span>
+                      </label>
                       <Select value={categoryId} onValueChange={setCategoryId}>
-                        <SelectTrigger className="w-full">
+                        <SelectTrigger>
                           <SelectValue placeholder="Select a category" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectGroup>
-                            {categories.map((c) => (
-                              <SelectItem key={c.id} value={c.id}>
-                                {c.name}
+                            {loadingCategories ? (
+                              <SelectItem value="loading" disabled>
+                                Loading categories...
                               </SelectItem>
-                            ))}
+                            ) : categories.length === 0 ? (
+                              <SelectItem value="empty" disabled>
+                                No categories available
+                              </SelectItem>
+                            ) : (
+                              categories.map((cat) => (
+                                <SelectItem key={cat.id} value={cat.id}>
+                                  {cat.name}
+                                </SelectItem>
+                              ))
+                            )}
                           </SelectGroup>
                         </SelectContent>
                       </Select>
-                    )}
-                    {formErrors.categoryId && (
-                      <p className="text-xs text-destructive">
-                        {formErrors.categoryId[0]}
-                      </p>
-                    )}
+                      {formErrors.categoryId && (
+                        <p className="text-xs text-destructive">
+                          {formErrors.categoryId[0]}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Add Category Button */}
+                  <div className="pt-2">
+                    <AddCategoryDialog onCategoryAdded={handleCategoryAdded} />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium text-foreground">
+                      Cover Image (optional)
+                    </label>
+                    <div className="flex items-center gap-4">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={uploadingImage}
+                      >
+                        {uploadingImage ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <Upload className="w-4 h-4 mr-2" />
+                        )}
+                        {imageUrl ? "Change Image" : "Upload Image"}
+                      </Button>
+                      {imageUrl && (
+                        <span className="text-xs text-muted-foreground">
+                          Image uploaded ✓
+                        </span>
+                      )}
+                    </div>
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      className="hidden"
+                      accept="image/png,image/jpeg,image/gif,image/webp"
+                      onChange={handleImageSelect}
+                    />
                   </div>
                 </CardContent>
               </Card>

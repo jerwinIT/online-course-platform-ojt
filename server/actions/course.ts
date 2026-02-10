@@ -33,6 +33,21 @@ const CourseSchema = z.object({
   sections: z.array(SectionSchema).default([]),
 });
 
+const CategorySchema = z.object({
+  name: z
+    .string()
+    .min(1, "Category name is required")
+    .max(50, "Category name too long"),
+  slug: z
+    .string()
+    .min(1, "Category slug is required")
+    .max(50, "Category slug too long")
+    .regex(
+      /^[a-z0-9-]+$/,
+      "Slug must contain only lowercase letters, numbers, and hyphens",
+    ),
+});
+
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
@@ -41,6 +56,10 @@ export type CourseFormData = z.infer<typeof CourseSchema>;
 
 export type ActionResult =
   | { success: true; courseId: string }
+  | { success: false; errors: Record<string, string[]> };
+
+export type CategoryActionResult =
+  | { success: true; category: { id: string; name: string; slug: string } }
   | { success: false; errors: Record<string, string[]> };
 
 // ---------------------------------------------------------------------------
@@ -67,7 +86,93 @@ async function handleImageUpload(file: File): Promise<string | null> {
 }
 
 // ---------------------------------------------------------------------------
-// createCourse — persists everything in one transaction
+// createCategory – creates a new category
+// ---------------------------------------------------------------------------
+
+export async function createCategory(
+  name: string,
+  slug: string,
+): Promise<CategoryActionResult> {
+  // 2. Validate
+  const parsed = CategorySchema.safeParse({ name, slug });
+  if (!parsed.success) {
+    return {
+      success: false,
+      errors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
+    };
+  }
+
+  // 3. Check if slug already exists
+  try {
+    const existingCategory = await prisma.category.findUnique({
+      where: { slug: parsed.data.slug },
+    });
+
+    if (existingCategory) {
+      return {
+        success: false,
+        errors: { slug: ["A category with this slug already exists."] },
+      };
+    }
+
+    // 4. Create the category
+    const category = await prisma.category.create({
+      data: {
+        name: parsed.data.name,
+        slug: parsed.data.slug,
+      },
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+      },
+    });
+
+    revalidatePath("/admin/courses/create");
+    return { success: true, category };
+  } catch (error) {
+    console.error("[createCategory] DB error:", error);
+    return {
+      success: false,
+      errors: {
+        _form: [
+          "Something went wrong creating the category. Please try again.",
+        ],
+      },
+    };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// getCategories – fetches all categories
+// ---------------------------------------------------------------------------
+
+export type GetCategoriesResult =
+  | { success: true; data: { id: string; name: string; slug: string }[] }
+  | { success: false; error: string };
+
+export async function getCategories(): Promise<GetCategoriesResult> {
+  try {
+    const categories = await prisma.category.findMany({
+      select: {
+        id: true,
+        name: true,
+        slug: true,
+      },
+      orderBy: {
+        name: "asc",
+      },
+    });
+
+    return { success: true, data: categories };
+  } catch (error) {
+    console.error("[getCategories] DB error:", error);
+    return { success: false, error: "Failed to load categories." };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// createCourse – persists everything in one transaction
 // ---------------------------------------------------------------------------
 
 export async function createCourse(
@@ -91,8 +196,15 @@ export async function createCourse(
     };
   }
 
-  const { title, subtitle, image, description, duration, categoryId, sections } =
-    parsed.data;
+  const {
+    title,
+    subtitle,
+    image,
+    description,
+    duration,
+    categoryId,
+    sections,
+  } = parsed.data;
 
   // 3. Persist inside a transaction so partial writes never happen
   try {
@@ -143,7 +255,7 @@ export async function createCourse(
 }
 
 // ---------------------------------------------------------------------------
-// publishCourse — flips isPublished to true
+// publishCourse – flips isPublished to true
 // ---------------------------------------------------------------------------
 
 export async function publishCourse(courseId: string): Promise<ActionResult> {
@@ -187,7 +299,7 @@ export async function publishCourse(courseId: string): Promise<ActionResult> {
 }
 
 // ---------------------------------------------------------------------------
-// uploadCourseImage — handles the file upload separately from the main form
+// uploadCourseImage – handles the file upload separately from the main form
 // so the heavy multipart request is isolated from the JSON form submission
 // ---------------------------------------------------------------------------
 
@@ -260,7 +372,7 @@ export type GetCoursesResult =
   | { success: false; error: string };
 
 // ---------------------------------------------------------------------------
-// getCourses — fetches all published courses for the listing page
+// getCourses – fetches all published courses for the listing page
 // ---------------------------------------------------------------------------
 
 export async function getCourses(): Promise<GetCoursesResult> {
