@@ -267,7 +267,7 @@ export default function AboutPage() {
             Start your learning journey today and be part of a global community transforming lives through education.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/signup">
+            <Link href="/auth/signup">
               <Button size="lg" className="gap-2">
                 Get Started
                 <ArrowRight className="w-4 h-4" />

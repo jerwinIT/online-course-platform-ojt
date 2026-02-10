@@ -1,111 +1,76 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Input } from '@/components/ui/input'
-import { Star, Users, Clock, BookOpen, Search } from 'lucide-react'
-import Navbar from '@/components/navbar'
-import Footer from '@/components/footer'
-
-const COURSES = [
-  {
-    id: 1,
-    title: 'React Fundamentals',
-    instructor: 'Sarah Johnson',
-    category: 'Web Development',
-    rating: 4.9,
-    reviews: 3240,
-    students: 45320,
-    price: 99.99,
-    level: 'Beginner',
-    duration: '24 hours',
-  },
-  {
-    id: 2,
-    title: 'Advanced JavaScript Patterns',
-    instructor: 'Michael Chen',
-    category: 'Web Development',
-    rating: 4.8,
-    reviews: 2890,
-    students: 38210,
-    price: 129.99,
-    level: 'Advanced',
-    duration: '32 hours',
-  },
-  {
-    id: 3,
-    title: 'UI/UX Design Mastery',
-    instructor: 'Emma Williams',
-    category: 'Design',
-    rating: 4.7,
-    reviews: 2120,
-    students: 28900,
-    price: 89.99,
-    level: 'Beginner',
-    duration: '28 hours',
-  },
-  {
-    id: 4,
-    title: 'Python for Data Science',
-    instructor: 'Dr. James Park',
-    category: 'Data Science',
-    rating: 4.9,
-    reviews: 4560,
-    students: 67450,
-    price: 119.99,
-    level: 'Intermediate',
-    duration: '40 hours',
-  },
-  {
-    id: 5,
-    title: 'Digital Marketing Bootcamp',
-    instructor: 'Lisa Anderson',
-    category: 'Marketing',
-    rating: 4.6,
-    reviews: 1890,
-    students: 15640,
-    price: 99.99,
-    level: 'Beginner',
-    duration: '20 hours',
-  },
-  {
-    id: 6,
-    title: 'Machine Learning Fundamentals',
-    instructor: 'Prof. Alex Kumar',
-    category: 'Data Science',
-    rating: 4.8,
-    reviews: 3120,
-    students: 42100,
-    price: 149.99,
-    level: 'Intermediate',
-    duration: '45 hours',
-  },
-]
+import { useState, useEffect } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Users, Clock, BookOpen, Search, Loader2 } from "lucide-react";
+import Footer from "@/components/footer";
+import { getCourses, type CourseListItem } from "@/server/actions/course"; // Adjust path as needed
 
 export default function CoursesPage() {
-  const [searchQuery, setSearchQuery] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState('All')
+  const [searchQuery, setSearchQuery] = useState("");
+  const [courses, setCourses] = useState<CourseListItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const categories = ['All', 'Web Development', 'Design', 'Data Science', 'Marketing']
+  // Fetch courses on mount
+  useEffect(() => {
+    async function fetchCourses() {
+      setLoading(true);
+      setError(null);
 
-  const filteredCourses = COURSES.filter((course) => {
+      const result = await getCourses();
+
+      if (result.success) {
+        setCourses(result.data);
+      } else {
+        setError(result.error);
+      }
+
+      setLoading(false);
+    }
+
+    fetchCourses();
+  }, []);
+
+  // Filter courses based on search
+  const filteredCourses = courses.filter((course) => {
     const matchesSearch =
       course.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      course.instructor.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesCategory = selectedCategory === 'All' || course.category === selectedCategory
-    return matchesSearch && matchesCategory
-  })
+      course.subtitle?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      course.createdBy.name?.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesSearch;
+  });
+
+  // Helper to format duration (assuming it's in minutes)
+  const formatDuration = (minutes: number | null) => {
+    if (!minutes) return "N/A";
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    if (hours > 0) {
+      return `${hours}h ${mins}m`;
+    }
+    return `${mins}m`;
+  };
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-
       {/* Header */}
       <section className="bg-secondary border-b border-border px-4 py-12 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-6xl">
-          <h1 className="text-4xl sm:text-5xl font-bold text-foreground mb-4">Explore Courses</h1>
+          <h1 className="text-4xl sm:text-5xl font-bold text-foreground mb-4">
+            Explore Courses
+          </h1>
           <p className="text-lg text-muted-foreground">
             Find the perfect course to learn new skills and advance your career.
           </p>
@@ -133,101 +98,137 @@ export default function CoursesPage() {
                   </div>
                 </div>
 
-                {/* Categories */}
-                <div className="space-y-3">
-                  <h3 className="font-semibold text-foreground">Categories</h3>
+                {/* Stats */}
+                {!loading && !error && (
                   <div className="space-y-2">
-                    {categories.map((category) => (
-                      <button
-                        key={category}
-                        onClick={() => setSelectedCategory(category)}
-                        className={`w-full text-left px-3 py-2 rounded-lg transition ${
-                          selectedCategory === category
-                            ? 'bg-primary text-primary-foreground'
-                            : 'hover:bg-secondary text-foreground'
-                        }`}
-                      >
-                        {category}
-                      </button>
-                    ))}
+                    <h3 className="font-semibold text-foreground">Stats</h3>
+                    <div className="text-sm text-muted-foreground">
+                      <p>{courses.length} total courses</p>
+                      <p>{filteredCourses.length} results</p>
+                    </div>
                   </div>
-                </div>
-
-                {/* Level Filter */}
-                <div className="space-y-3">
-                  <h3 className="font-semibold text-foreground">Level</h3>
-                  <div className="space-y-2">
-                    {['Beginner', 'Intermediate', 'Advanced'].map((level) => (
-                      <label key={level} className="flex items-center gap-2 cursor-pointer">
-                        <input type="checkbox" className="w-4 h-4 rounded" />
-                        <span className="text-foreground">{level}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
+                )}
               </div>
             </div>
 
             {/* Courses Grid */}
             <div className="lg:col-span-3">
               <div className="space-y-4">
-                {filteredCourses.length > 0 ? (
+                {/* Loading State */}
+                {loading && (
+                  <div className="flex flex-col items-center justify-center py-12">
+                    <Loader2 className="w-12 h-12 text-primary animate-spin mb-4" />
+                    <p className="text-muted-foreground">Loading courses...</p>
+                  </div>
+                )}
+
+                {/* Error State */}
+                {error && (
+                  <div className="text-center py-12">
+                    <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-6 max-w-md mx-auto">
+                      <h3 className="text-lg font-semibold text-destructive mb-2">
+                        Error Loading Courses
+                      </h3>
+                      <p className="text-sm text-muted-foreground">{error}</p>
+                      <Button
+                        variant="outline"
+                        className="mt-4"
+                        onClick={() => window.location.reload()}
+                      >
+                        Retry
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {/* Courses List */}
+                {!loading && !error && filteredCourses.length > 0 && (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {filteredCourses.map((course) => (
                       <Card
                         key={course.id}
                         className="overflow-hidden hover:shadow-lg transition-shadow duration-300 flex flex-col"
                       >
-                        <div className="bg-gradient-to-br from-primary/10 to-accent/10 h-40 flex items-center justify-center">
-                          <BookOpen className="w-12 h-12 text-primary opacity-40" />
+                        {/* Course Image */}
+                        <div className="bg-gradient-to-br from-primary/10 to-accent/10 h-40 flex items-center justify-center relative overflow-hidden">
+                          {course.image ? (
+                            <img
+                              src={course.image}
+                              alt={course.title}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <BookOpen className="w-12 h-12 text-primary opacity-40" />
+                          )}
                         </div>
+
                         <CardHeader>
                           <div className="flex items-start justify-between gap-2 mb-2">
-                            <CardTitle className="line-clamp-2 flex-1">{course.title}</CardTitle>
-                            <Badge variant="outline" className="whitespace-nowrap">
-                              {course.level}
+                            <CardTitle className="line-clamp-2 flex-1">
+                              {course.title}
+                            </CardTitle>
+                            <Badge
+                              variant="outline"
+                              className="whitespace-nowrap"
+                            >
+                              {course._count.sections} sections
                             </Badge>
                           </div>
-                          <CardDescription>{course.instructor}</CardDescription>
+                          <CardDescription className="line-clamp-1">
+                            {course.subtitle ||
+                              course.createdBy.name ||
+                              "Course"}
+                          </CardDescription>
                         </CardHeader>
+
                         <CardContent className="flex-1 flex flex-col justify-between space-y-4">
                           <div className="space-y-3">
-                            <div className="flex items-center gap-4 text-sm">
-                              <div className="flex items-center gap-1">
-                                <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                                <span className="font-medium">{course.rating}</span>
-                                <span className="text-muted-foreground">({course.reviews})</span>
-                              </div>
-                            </div>
+                            {/* Description */}
+                            {course.description && (
+                              <p className="text-sm text-muted-foreground line-clamp-2">
+                                {course.description}
+                              </p>
+                            )}
 
+                            {/* Stats */}
                             <div className="grid grid-cols-2 gap-3 text-sm">
                               <div className="flex items-center gap-2 text-muted-foreground">
                                 <Users className="w-4 h-4" />
-                                <span>{(course.students / 1000).toFixed(1)}K students</span>
+                                <span>
+                                  {course._count.enrollments} enrolled
+                                </span>
                               </div>
                               <div className="flex items-center gap-2 text-muted-foreground">
                                 <Clock className="w-4 h-4" />
-                                <span>{course.duration}</span>
+                                <span>{formatDuration(course.duration)}</span>
                               </div>
-                            </div>
-
-                            <div className="pt-2 border-t border-border">
-                              <span className="text-2xl font-bold text-primary">${course.price}</span>
                             </div>
                           </div>
 
-                          <Link href={`/courses/${course.id}`} className="w-full">
+                          <Link
+                            href={`/courses/${course.id}`}
+                            className="w-full"
+                          >
                             <Button className="w-full">View Course</Button>
                           </Link>
                         </CardContent>
                       </Card>
                     ))}
                   </div>
-                ) : (
+                )}
+
+                {/* Empty State */}
+                {!loading && !error && filteredCourses.length === 0 && (
                   <div className="text-center py-12">
                     <BookOpen className="w-16 h-16 mx-auto text-muted-foreground opacity-30 mb-4" />
-                    <h3 className="text-lg font-semibold text-foreground mb-2">No courses found</h3>
-                    <p className="text-muted-foreground">Try adjusting your search or filters</p>
+                    <h3 className="text-lg font-semibold text-foreground mb-2">
+                      No courses found
+                    </h3>
+                    <p className="text-muted-foreground">
+                      {searchQuery
+                        ? "Try adjusting your search"
+                        : "No courses available yet"}
+                    </p>
                   </div>
                 )}
               </div>
@@ -238,5 +239,5 @@ export default function CoursesPage() {
 
       <Footer />
     </div>
-  )
+  );
 }

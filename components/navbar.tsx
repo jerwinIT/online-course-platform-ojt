@@ -3,12 +3,27 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useSession, signOut } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
-import { BookOpen, Menu, X } from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { BookOpen, Menu, X, CircleUser, LayoutDashboard, LogOut } from 'lucide-react'
 
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false)
   const pathname = usePathname()
+  const { data: session, status } = useSession()
+  const isAuthenticated = status === 'authenticated' && session?.user
+
+  function handleSignOut() {
+    signOut({ callbackUrl: '/' })
+  }
 
   return (
     <nav className="border-b border-border bg-background sticky top-0 z-50">
@@ -56,14 +71,53 @@ export default function Navbar() {
             </Link>
           </div>
 
-          {/* Desktop Auth Buttons */}
+          {/* Desktop: Profile dropdown or Auth buttons */}
           <div className="hidden md:flex items-center gap-3">
-            <Link href="/auth/login">
-              <Button variant="outline">Log In</Button>
-            </Link>
-            <Link href="/auth/signup">
-              <Button>Sign Up</Button>
-            </Link>
+            {isAuthenticated ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="rounded-full">
+                    <CircleUser className="w-6 h-6" />
+                    <span className="sr-only">Open user menu</span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>
+                    <span className="font-normal">
+                      <p className="text-sm font-medium">{session?.user?.name ?? 'User'}</p>
+                      <p className="text-xs text-muted-foreground truncate">
+                        {session?.user?.email}
+                      </p>
+                    </span>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/dashboard" className="flex items-center gap-2 cursor-pointer">
+                      <LayoutDashboard className="w-4 h-4" />
+                      Dashboard
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    variant="destructive"
+                    onClick={handleSignOut}
+                    className="cursor-pointer"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Sign out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <>
+                <Link href="/auth/login">
+                  <Button variant="outline">Log In</Button>
+                </Link>
+                <Link href="/auth/signup">
+                  <Button>Sign Up</Button>
+                </Link>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -85,6 +139,7 @@ export default function Navbar() {
                   ? 'bg-primary/10 text-primary font-medium'
                   : 'text-foreground hover:bg-secondary'
               }`}
+              onClick={() => setIsOpen(false)}
             >
               Courses
             </Link>
@@ -95,6 +150,7 @@ export default function Navbar() {
                   ? 'bg-primary/10 text-primary font-medium'
                   : 'text-foreground hover:bg-secondary'
               }`}
+              onClick={() => setIsOpen(false)}
             >
               Dashboard
             </Link>
@@ -105,18 +161,45 @@ export default function Navbar() {
                   ? 'bg-primary/10 text-primary font-medium'
                   : 'text-foreground hover:bg-secondary'
               }`}
+              onClick={() => setIsOpen(false)}
             >
               About
             </Link>
             <div className="flex flex-col gap-2 pt-2">
-              <Link href="/login" className="w-full">
-                <Button variant="outline" className="w-full bg-transparent">
-                  Log In
-                </Button>
-              </Link>
-              <Link href="/signup" className="w-full">
-                <Button className="w-full">Sign Up</Button>
-              </Link>
+              {isAuthenticated ? (
+                <>
+                  <div className="px-4 py-2 text-sm text-muted-foreground border-b border-border">
+                    <p className="font-medium text-foreground">{session?.user?.name ?? 'User'}</p>
+                    <p className="text-xs truncate">{session?.user?.email}</p>
+                  </div>
+                  <Link href="/dashboard" onClick={() => setIsOpen(false)}>
+                    <Button variant="outline" className="w-full bg-transparent">
+                      Dashboard
+                    </Button>
+                  </Link>
+                  <Button
+                    variant="outline"
+                    className="w-full bg-transparent text-destructive hover:text-destructive"
+                    onClick={() => {
+                      setIsOpen(false)
+                      handleSignOut()
+                    }}
+                  >
+                    Sign out
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Link href="/auth/login" className="w-full" onClick={() => setIsOpen(false)}>
+                    <Button variant="outline" className="w-full bg-transparent">
+                      Log In
+                    </Button>
+                  </Link>
+                  <Link href="/auth/signup" className="w-full" onClick={() => setIsOpen(false)}>
+                    <Button className="w-full">Sign Up</Button>
+                  </Link>
+                </>
+              )}
             </div>
           </div>
         )}

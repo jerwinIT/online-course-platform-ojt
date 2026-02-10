@@ -1,16 +1,50 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
+import { signIn } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { BookOpen, Mail, Lock, User, ArrowRight } from 'lucide-react'
+import { signUpWithCredentials } from '@/server/actions/auth'
 
 export default function SignupPage() {
+  const searchParams = useSearchParams()
+  const callbackUrl = searchParams.get('callbackUrl') ?? '/dashboard'
+
+  const [error, setError] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    setError('')
+    setIsLoading(true)
+    const formData = new FormData(e.currentTarget)
+    try {
+      const result = await signUpWithCredentials(null, formData)
+      if (result.error) {
+        setError(result.error)
+        return
+      }
+      if (result.success) {
+        window.location.href = `/auth/login?registered=1&callbackUrl=${encodeURIComponent(callbackUrl)}`
+        return
+      }
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  function handleGoogleSignIn() {
+    setError('')
+    signIn('google', { callbackUrl })
+  }
+
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
       <div className="w-full max-w-md space-y-8">
-        {/* Logo */}
         <Link href="/" className="flex items-center justify-center gap-2 font-bold text-2xl text-foreground">
           <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
             <BookOpen className="w-6 h-6 text-primary-foreground" />
@@ -18,7 +52,6 @@ export default function SignupPage() {
           LearnHub
         </Link>
 
-        {/* Card */}
         <Card>
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl">Create account</CardTitle>
@@ -26,17 +59,23 @@ export default function SignupPage() {
           </CardHeader>
 
           <CardContent className="space-y-6">
-            {/* Form */}
-            <form className="space-y-4">
+            <form className="space-y-4" onSubmit={handleSubmit}>
+              {error && (
+                <p className="text-sm text-destructive bg-destructive/10 rounded-md px-3 py-2">
+                  {error}
+                </p>
+              )}
               <div className="space-y-2">
                 <label className="text-sm font-medium text-foreground">Full Name</label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     type="text"
+                    name="name"
                     placeholder="John Doe"
                     className="pl-10"
                     required
+                    disabled={isLoading}
                   />
                 </div>
               </div>
@@ -47,9 +86,11 @@ export default function SignupPage() {
                   <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     type="email"
+                    name="email"
                     placeholder="you@example.com"
                     className="pl-10"
                     required
+                    disabled={isLoading}
                   />
                 </div>
               </div>
@@ -60,9 +101,12 @@ export default function SignupPage() {
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     type="password"
+                    name="password"
                     placeholder="••••••••"
                     className="pl-10"
                     required
+                    minLength={8}
+                    disabled={isLoading}
                   />
                 </div>
                 <p className="text-xs text-muted-foreground">
@@ -76,15 +120,18 @@ export default function SignupPage() {
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
                     type="password"
+                    name="confirmPassword"
                     placeholder="••••••••"
                     className="pl-10"
                     required
+                    minLength={8}
+                    disabled={isLoading}
                   />
                 </div>
               </div>
 
               <label className="flex items-start gap-2 cursor-pointer">
-                <input type="checkbox" className="w-4 h-4 rounded border-border mt-1" />
+                <input type="checkbox" className="w-4 h-4 rounded border-border mt-1" required />
                 <span className="text-sm text-foreground">
                   I agree to the{' '}
                   <Link href="/terms" className="text-primary hover:underline">
@@ -97,13 +144,12 @@ export default function SignupPage() {
                 </span>
               </label>
 
-              <Button type="submit" className="w-full" size="lg">
-                Create Account
+              <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
+                {isLoading ? 'Creating account…' : 'Create Account'}
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </form>
 
-            {/* Divider */}
             <div className="relative">
               <div className="absolute inset-0 flex items-center">
                 <div className="w-full border-t border-border" />
@@ -112,11 +158,17 @@ export default function SignupPage() {
                 <span className="px-2 bg-background text-muted-foreground">Or sign up with</span>
               </div>
             </div>
-            {/* Social Login */}   
-            <Button variant="outline" className="w-full bg-transparent">
+
+            <Button
+              type="button"
+              variant="outline"
+              className="w-full bg-transparent"
+              onClick={handleGoogleSignIn}
+              disabled={isLoading}
+            >
               Google
             </Button>
-            {/* Login Link */}
+
             <p className="text-center text-sm text-muted-foreground">
               Already have an account?{' '}
               <Link href="/auth/login" className="text-primary hover:underline font-medium">

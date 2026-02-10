@@ -1,6 +1,10 @@
 'use client'
 
 import Link from 'next/link'
+import Image from 'next/image'
+import { useRouter } from 'next/navigation'
+import { useEffect } from 'react'
+import { useSession, signOut } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -13,8 +17,8 @@ import {
   FileText,
   Settings,
   LogOut,
+  User,
 } from 'lucide-react'
-import Navbar from '@/components/navbar'
 import Footer from '@/components/footer'
 
 const ENROLLED_COURSES = [
@@ -48,6 +52,31 @@ const ENROLLED_COURSES = [
 ]
 
 export default function DashboardPage() {
+  const router = useRouter()
+  const { data: session, status } = useSession()
+  const isLoading = status === 'loading'
+  const user = session?.user
+  const displayName = user?.name ?? user?.email ?? 'there'
+
+  useEffect(() => {
+    if (status === 'authenticated' && user?.role === 'ADMIN') {
+      router.replace('/admin')
+    }
+  }, [status, user?.role, router])
+
+  if (isLoading || (status === 'authenticated' && user?.role === 'ADMIN')) {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center">
+        <div className="animate-pulse flex flex-col items-center gap-4">
+          <div className="w-12 h-12 rounded-full bg-muted" />
+          <p className="text-muted-foreground">
+            {user?.role === 'ADMIN' ? 'Redirecting to admin…' : 'Loading your dashboard…'}
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
 
@@ -55,9 +84,28 @@ export default function DashboardPage() {
       <section className="bg-gradient-to-r from-primary/10 to-accent/10 border-b border-border px-4 py-8 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-6xl">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-              <h1 className="text-3xl sm:text-4xl font-bold text-foreground">Welcome back, Sarah!</h1>
-              <p className="text-muted-foreground mt-2">Here&apos;s your learning overview</p>
+            <div className="flex items-center gap-4">
+              <div className="relative w-14 h-14 rounded-full overflow-hidden bg-muted flex-shrink-0 ring-2 ring-border">
+                {user?.image ? (
+                  <Image
+                    src={user.image}
+                    alt=""
+                    fill
+                    className="object-cover"
+                    sizes="56px"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <User className="w-7 h-7 text-muted-foreground" />
+                  </div>
+                )}
+              </div>
+              <div>
+                <h1 className="text-3xl sm:text-4xl font-bold text-foreground">
+                  Welcome back, {displayName}
+                </h1>
+                <p className="text-muted-foreground mt-2">Here&apos;s your learning overview</p>
+              </div>
             </div>
             <div className="flex gap-3">
               <Link href="/settings">
@@ -65,7 +113,7 @@ export default function DashboardPage() {
                   <Settings className="w-4 h-4" />
                 </Button>
               </Link>
-              <Button variant="outline">
+              <Button variant="outline" onClick={() => signOut({ callbackUrl: '/' })}>
                 <LogOut className="w-4 h-4 mr-2" />
                 Log Out
               </Button>
