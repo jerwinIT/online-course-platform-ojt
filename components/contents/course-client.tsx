@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
@@ -15,7 +15,16 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Users, Clock, BookOpen, Search } from "lucide-react";
 import type { CourseListItem } from "@/server/actions/course";
+import { getCategories } from "@/server/actions/course";
 import { formatDuration } from "@/lib/utils/format";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface CoursesClientProps {
   courses: CourseListItem[];
@@ -23,15 +32,47 @@ interface CoursesClientProps {
 
 export default function CoursesClient({ courses }: CoursesClientProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [categoryId, setCategoryId] = useState<string>("all");
+  const [categories, setCategories] = useState<
+    Array<{ id: string; name: string; slug: string }>
+  >([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
+
+  // Fetch categories from server action
+  useEffect(() => {
+    const fetchCategories = async () => {
+      setLoadingCategories(true);
+      try {
+        const result = await getCategories();
+        if (result.success) {
+          setCategories(result.data);
+        } else {
+          console.error("Failed to load categories:", result.error);
+          setCategories([]);
+        }
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+        setCategories([]);
+      } finally {
+        setLoadingCategories(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
 
   const filteredCourses = courses.filter((course) => {
     const q = searchQuery.toLowerCase();
-    return (
+    const matchesSearch =
       course.title.toLowerCase().includes(q) ||
       course.subtitle?.toLowerCase().includes(q) ||
       course.createdBy.name?.toLowerCase().includes(q) ||
-      course.category.name.toLowerCase().includes(q)
-    );
+      course.category.name.toLowerCase().includes(q);
+
+    const matchesCategory =
+      categoryId === "all" || course.category.id === categoryId;
+
+    return matchesSearch && matchesCategory;
   });
 
   return (
@@ -55,13 +96,34 @@ export default function CoursesClient({ courses }: CoursesClientProps) {
                 </div>
               </div>
 
-              {/* Stats */}
+              {/* Category */}
               <div className="space-y-2">
-                <h3 className="font-semibold text-foreground">Stats</h3>
-                <div className="text-sm text-muted-foreground space-y-1">
-                  <p>{courses.length} total courses</p>
-                  {searchQuery && <p>{filteredCourses.length} results</p>}
-                </div>
+                <h3 className="font-semibold text-foreground">Category</h3>
+                <Select value={categoryId} onValueChange={setCategoryId}>
+                  <SelectTrigger className="flex-1">
+                    <SelectValue placeholder="Select a category" />
+                  </SelectTrigger>
+                  <SelectContent position="popper">
+                    <SelectGroup>
+                      <SelectItem value="all">All Categories</SelectItem>
+                      {loadingCategories ? (
+                        <SelectItem value="loading" disabled>
+                          Loading categories...
+                        </SelectItem>
+                      ) : categories.length === 0 ? (
+                        <SelectItem value="empty" disabled>
+                          No categories available
+                        </SelectItem>
+                      ) : (
+                        categories.map((cat) => (
+                          <SelectItem key={cat.id} value={cat.id}>
+                            {cat.name}
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectGroup>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>

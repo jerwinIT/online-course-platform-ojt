@@ -1,51 +1,60 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import Link from 'next/link'
-import { useSearchParams } from 'next/navigation'
-import { signIn } from 'next-auth/react'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { BookOpen, Mail, Lock, User, ArrowRight } from 'lucide-react'
-import { signUpWithCredentials } from '@/server/actions/auth'
+import { Suspense, useState } from "react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
+import { signIn } from "next-auth/react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { BookOpen, Mail, Lock, User, ArrowRight } from "lucide-react";
+import { signUpWithCredentials } from "@/server/actions/auth";
 
-export default function SignupPage() {
-  const searchParams = useSearchParams()
-  const callbackUrl = searchParams.get('callbackUrl') ?? '/dashboard'
+function SignupForm() {
+  const searchParams = useSearchParams();
+  const callbackUrl = searchParams.get("callbackUrl") ?? "/dashboard";
 
-  const [error, setError] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault()
-    setError('')
-    setIsLoading(true)
-    const formData = new FormData(e.currentTarget)
+    e.preventDefault();
+    setError("");
+    setIsLoading(true);
+    const formData = new FormData(e.currentTarget);
     try {
-      const result = await signUpWithCredentials(null, formData)
+      const result = await signUpWithCredentials(null, formData);
       if (result.error) {
-        setError(result.error)
-        return
+        setError(result.error);
+        return;
       }
       if (result.success) {
-        window.location.href = `/auth/login?registered=1&callbackUrl=${encodeURIComponent(callbackUrl)}`
-        return
+        window.location.href = `/auth/login?registered=1&callbackUrl=${encodeURIComponent(callbackUrl)}`;
+        return;
       }
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
   }
 
   function handleGoogleSignIn() {
-    setError('')
-    signIn('google', { callbackUrl })
+    setError("");
+    signIn("google", { callbackUrl });
   }
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center px-4">
       <div className="w-full max-w-md space-y-8">
-        <Link href="/" className="flex items-center justify-center gap-2 font-bold text-2xl text-foreground">
+        <Link
+          href="/"
+          className="flex items-center justify-center gap-2 font-bold text-2xl text-foreground"
+        >
           <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
             <BookOpen className="w-6 h-6 text-primary-foreground" />
           </div>
@@ -55,7 +64,9 @@ export default function SignupPage() {
         <Card>
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl">Create account</CardTitle>
-            <CardDescription>Join LearnHub and start learning today</CardDescription>
+            <CardDescription>
+              Join LearnHub and start learning today
+            </CardDescription>
           </CardHeader>
 
           <CardContent className="space-y-6">
@@ -66,7 +77,9 @@ export default function SignupPage() {
                 </p>
               )}
               <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">Full Name</label>
+                <label className="text-sm font-medium text-foreground">
+                  Full Name
+                </label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
@@ -81,7 +94,9 @@ export default function SignupPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">Email</label>
+                <label className="text-sm font-medium text-foreground">
+                  Email
+                </label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
@@ -96,7 +111,9 @@ export default function SignupPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">Password</label>
+                <label className="text-sm font-medium text-foreground">
+                  Password
+                </label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
@@ -115,7 +132,9 @@ export default function SignupPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-foreground">Confirm Password</label>
+                <label className="text-sm font-medium text-foreground">
+                  Confirm Password
+                </label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
@@ -131,21 +150,33 @@ export default function SignupPage() {
               </div>
 
               <label className="flex items-start gap-2 cursor-pointer">
-                <input type="checkbox" className="w-4 h-4 rounded border-border mt-1" required />
+                <input
+                  type="checkbox"
+                  className="w-4 h-4 rounded border-border mt-1"
+                  required
+                />
                 <span className="text-sm text-foreground">
-                  I agree to the{' '}
+                  I agree to the{" "}
                   <Link href="/terms" className="text-primary hover:underline">
                     Terms of Service
-                  </Link>{' '}
-                  and{' '}
-                  <Link href="/privacy" className="text-primary hover:underline">
+                  </Link>{" "}
+                  and{" "}
+                  <Link
+                    href="/privacy"
+                    className="text-primary hover:underline"
+                  >
                     Privacy Policy
                   </Link>
                 </span>
               </label>
 
-              <Button type="submit" className="w-full" size="lg" disabled={isLoading}>
-                {isLoading ? 'Creating account…' : 'Create Account'}
+              <Button
+                type="submit"
+                className="w-full"
+                size="lg"
+                disabled={isLoading}
+              >
+                {isLoading ? "Creating account…" : "Create Account"}
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </form>
@@ -155,7 +186,9 @@ export default function SignupPage() {
                 <div className="w-full border-t border-border" />
               </div>
               <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-background text-muted-foreground">Or sign up with</span>
+                <span className="px-2 bg-background text-muted-foreground">
+                  Or sign up with
+                </span>
               </div>
             </div>
 
@@ -170,8 +203,11 @@ export default function SignupPage() {
             </Button>
 
             <p className="text-center text-sm text-muted-foreground">
-              Already have an account?{' '}
-              <Link href="/auth/login" className="text-primary hover:underline font-medium">
+              Already have an account?{" "}
+              <Link
+                href="/auth/login"
+                className="text-primary hover:underline font-medium"
+              >
                 Sign in
               </Link>
             </p>
@@ -179,5 +215,19 @@ export default function SignupPage() {
         </Card>
       </div>
     </div>
-  )
+  );
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-background flex items-center justify-center">
+          <div className="text-muted-foreground">Loading...</div>
+        </div>
+      }
+    >
+      <SignupForm />
+    </Suspense>
+  );
 }

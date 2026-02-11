@@ -1,0 +1,24 @@
+Project:
+Online Course Platform
+
+Description:
+Users enroll in courses and track progress
+
+Core Tables:
+users, roles, courses, enrollments, lessons, progress
+
+User Personas
+-Admin (School)
+-Student
+
+Operations:
+Admin
+- Manage Users (Delete, Add, Edit (Email, Password, Role))
+- Manage Course (Add, Edit, Delete)
+
+Student
+- Browse Course
+- Enroll Course (with Progress Tracking)
+- Saved Course
+
+
