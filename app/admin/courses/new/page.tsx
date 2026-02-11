@@ -4,6 +4,7 @@ import { useState, useRef, useTransition, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Lesson, Category, Section } from "@/types/course";
 import {
   Card,
   CardContent,
@@ -54,22 +55,6 @@ import { useRouter } from "next/navigation";
 // ---------------------------------------------------------------------------
 // Types
 // ---------------------------------------------------------------------------
-
-interface Lesson {
-  _id: number;
-  title: string;
-  content: string;
-  videoUrl: string;
-  duration: number;
-}
-
-interface Section {
-  _id: number;
-  title: string;
-  lessons: Lesson[];
-}
-
-type Category = { id: string; name: string; slug: string };
 
 // ---------------------------------------------------------------------------
 // LessonRow — inline editable lesson inside a section
@@ -532,7 +517,6 @@ export default function CreateCoursePage() {
   const [title, setTitle] = useState("");
   const [subtitle, setSubtitle] = useState("");
   const [description, setDescription] = useState("");
-  const [duration, setDuration] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [sections, setSections] = useState<Section[]>([]);
   const [imageUrl, setImageUrl] = useState("");
@@ -629,7 +613,7 @@ export default function CreateCoursePage() {
       subtitle,
       image: imageUrl,
       description,
-      duration: Number(duration) || 0,
+      duration: computedDuration,
       categoryId,
       sections: sections.map((sec, sIdx) => ({
         title: sec.title,
@@ -662,7 +646,7 @@ export default function CreateCoursePage() {
       subtitle,
       image: imageUrl,
       description,
-      duration: Number(duration) || 0,
+      duration: computedDuration,
       categoryId,
       sections: sections.map((sec, sIdx) => ({
         title: sec.title,
@@ -709,11 +693,21 @@ export default function CreateCoursePage() {
   // Validation helpers
   // ---------------------------------------------------------------------------
 
+  // Compute total duration in hours from lesson durations (minutes → hours, rounded up, min 1)
+  const computedDuration = Math.max(
+    1,
+    Math.ceil(
+      sections.reduce(
+        (total, sec) =>
+          total + sec.lessons.reduce((sum, l) => sum + (l.duration || 0), 0),
+        0,
+      ) / 60,
+    ),
+  );
+
   const basicComplete = title.trim().length > 0;
   const detailsComplete =
-    description.trim().length > 0 &&
-    Number(duration) > 0 &&
-    categoryId.length > 0;
+    description.trim().length > 0 && categoryId.length > 0;
   const curriculumComplete = sections.every((s) => s.title.trim().length > 0);
 
   return (
@@ -722,7 +716,7 @@ export default function CreateCoursePage() {
         <div className="mb-8 flex items-center justify-between">
           <div>
             <Link
-              href="/admin/courses"
+              href="/admin?tab=courses"
               className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1 mb-2"
             >
               <ArrowLeft className="w-4 h-4" />
@@ -813,7 +807,7 @@ export default function CreateCoursePage() {
                 <CardHeader>
                   <CardTitle>Course Details</CardTitle>
                   <CardDescription>
-                    Provide a description, duration, category, and cover image
+                    Provide a description, category, and cover image
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
@@ -834,26 +828,6 @@ export default function CreateCoursePage() {
                     )}
                   </div>
 
-                  <div>
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium text-foreground">
-                        Total Duration (hours){" "}
-                        <span className="text-destructive">*</span>
-                      </label>
-                      <Input
-                        type="number"
-                        placeholder="e.g., 12"
-                        min={1}
-                        value={duration}
-                        onChange={(e) => setDuration(e.target.value)}
-                      />
-                      {formErrors.duration && (
-                        <p className="text-xs text-destructive">
-                          {formErrors.duration[0]}
-                        </p>
-                      )}
-                    </div>
-                  </div>
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-foreground">
                       Category <span className="text-destructive">*</span>
@@ -1023,13 +997,24 @@ export default function CreateCoursePage() {
                     </p>
                     <p>
                       <span className="font-medium">Duration:</span>{" "}
-                      {duration ? (
-                        `${duration}h`
-                      ) : (
-                        <span className="text-muted-foreground italic">
-                          Not set
-                        </span>
-                      )}
+                      {(() => {
+                        const totalMinutes = sections.reduce(
+                          (total, sec) =>
+                            total +
+                            sec.lessons.reduce(
+                              (sum, l) => sum + (l.duration || 0),
+                              0,
+                            ),
+                          0,
+                        );
+                        return totalMinutes > 0 ? (
+                          `${computedDuration}h (${totalMinutes} min total across lessons)`
+                        ) : (
+                          <span className="text-muted-foreground italic">
+                            Will be computed from lesson durations
+                          </span>
+                        );
+                      })()}
                     </p>
                     <p>
                       <span className="font-medium">Category:</span>{" "}
@@ -1068,9 +1053,7 @@ export default function CreateCoursePage() {
                       <ul className="mt-2 text-xs text-yellow-800 dark:text-yellow-200 list-disc list-inside space-y-0.5">
                         {!basicComplete && <li>Course title is required</li>}
                         {!detailsComplete && (
-                          <li>
-                            Description, duration, and category are required
-                          </li>
+                          <li>Description and category are required</li>
                         )}
                         {!curriculumComplete && (
                           <li>All sections need a title</li>

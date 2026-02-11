@@ -28,7 +28,10 @@ const CourseSchema = z.object({
   subtitle: z.string().optional(),
   image: z.string().optional(),
   description: z.string().min(1, "Course description is required"),
-  duration: z.coerce.number().int().min(1, "Duration must be at least 1 hour"),
+  duration: z.coerce
+    .number()
+    .int()
+    .min(0, "Duration must be a non-negative number"),
   categoryId: z.string().uuid("Invalid category"),
   sections: z.array(SectionSchema).default([]),
 });
@@ -466,5 +469,308 @@ export async function getCourses(): Promise<GetCoursesResult> {
   } catch (error) {
     console.error("[getCourses] DB error:", error);
     return { success: false, error: "Failed to load courses." };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// getCourseById – fetches a single course with all details for editing
+// ---------------------------------------------------------------------------
+
+export type CourseDetailItem = {
+  id: string;
+  title: string;
+  subtitle: string | null;
+  image: string | null;
+  description: string;
+  duration: number;
+  isPublished: boolean;
+  categoryId: string;
+  createdById: string;
+  sections: {
+    id: string;
+    title: string;
+    order: number;
+    lessons: {
+      id: string;
+      title: string;
+      content: string;
+      videoUrl: string | null;
+      duration: number;
+      order: number;
+    }[];
+  }[];
+};
+
+export type GetCourseByIdResult =
+  | { success: true; data: CourseDetailItem }
+  | { success: false; error: string };
+
+export async function getCourseById(
+  courseId: string,
+): Promise<GetCourseByIdResult> {
+  const session = await getSession();
+  if (!session?.user?.id) {
+    return { success: false, error: "Unauthorized." };
+  }
+
+  if (!courseId) {
+    return { success: false, error: "Course ID is required." };
+  }
+
+  try {
+    const course = await prisma.course.findUnique({
+      where: { id: courseId },
+      select: {
+        id: true,
+        title: true,
+        subtitle: true,
+        image: true,
+        description: true,
+        duration: true,
+        isPublished: true,
+        categoryId: true,
+        createdById: true,
+        sections: {
+          select: {
+            id: true,
+            title: true,
+            order: true,
+            lessons: {
+              select: {
+                id: true,
+                title: true,
+                content: true,
+                videoUrl: true,
+                duration: true,
+                order: true,
+              },
+              orderBy: {
+                order: "asc",
+              },
+            },
+          },
+          orderBy: {
+            order: "asc",
+          },
+        },
+      },
+    });
+
+    if (!course) {
+      return { success: false, error: "Course not found." };
+    }
+
+    // Ensure the user owns this course
+    if (course.createdById !== session.user.id) {
+      return { success: false, error: "Access denied." };
+    }
+
+    return { success: true, data: course };
+  } catch (error) {
+    console.error("[getCourseById] DB error:", error);
+    return { success: false, error: "Failed to load course." };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// updateCourse – updates a course with all its sections and lessons
+// ---------------------------------------------------------------------------
+
+export async function updateCourse(
+  courseId: string,
+  formData: CourseFormData,
+): Promise<ActionResult> {
+  // 1. Auth check
+  const session = await getSession();
+  if (!session?.user?.id) {
+    return {
+      success: false,
+      errors: { _form: ["You must be signed in to update a course."] },
+    };
+  }
+
+  if (!courseId) {
+    return {
+      success: false,
+      errors: { _form: ["Course ID is required."] },
+    };
+  }
+
+  // 2. Validate
+  const parsed = CourseSchema.safeParse(formData);
+  if (!parsed.success) {
+    return {
+      success: false,
+      errors: parsed.error.flatten().fieldErrors as Record<string, string[]>,
+    };
+  }
+
+  const {
+    title,
+    subtitle,
+    image,
+    description,
+    duration,
+    categoryId,
+    sections,
+  } = parsed.data;
+
+  try {
+    // First, verify ownership
+    const existingCourse = await prisma.course.findUnique({
+      where: { id: courseId },
+      select: { createdById: true },
+    });
+
+    if (!existingCourse) {
+      return {
+        success: false,
+        errors: { _form: ["Course not found."] },
+      };
+    }
+
+    if (existingCourse.createdById !== session.user.id) {
+      return {
+        success: false,
+        errors: { _form: ["Access denied."] },
+      };
+    }
+
+    // 3. Update inside a transaction
+    await prisma.$transaction(async (tx) => {
+      // Update course basic info
+      await tx.course.update({
+        where: { id: courseId },
+        data: {
+          title,
+          subtitle: subtitle ?? null,
+          image: image ?? null,
+          description,
+          duration,
+          categoryId,
+        },
+      });
+
+      // Delete all existing sections and lessons (cascade should handle lessons)
+      await tx.section.deleteMany({
+        where: { courseId },
+      });
+
+      // Recreate sections and lessons
+      if (sections.length > 0) {
+        await tx.section.createMany({
+          data: sections.map((section, sIdx) => ({
+            title: section.title,
+            order: sIdx,
+            courseId,
+          })),
+        });
+
+        // Get the newly created sections to get their IDs
+        const createdSections = await tx.section.findMany({
+          where: { courseId },
+          orderBy: { order: "asc" },
+          select: { id: true, order: true },
+        });
+
+        // Create lessons for each section
+        for (let i = 0; i < sections.length; i++) {
+          const section = sections[i];
+          const sectionRecord = createdSections.find((s) => s.order === i);
+
+          if (sectionRecord && section.lessons.length > 0) {
+            await tx.lesson.createMany({
+              data: section.lessons.map((lesson, lIdx) => ({
+                title: lesson.title,
+                content: lesson.content,
+                videoUrl: lesson.videoUrl || null,
+                duration: lesson.duration,
+                order: lIdx,
+                sectionId: sectionRecord.id,
+              })),
+            });
+          }
+        }
+      }
+    });
+
+    revalidatePath("/admin/courses");
+    revalidatePath(`/admin/courses/${courseId}/edit`);
+    revalidatePath(`/courses/${courseId}`);
+    return { success: true, courseId };
+  } catch (error) {
+    console.error("[updateCourse] DB error:", error);
+    return {
+      success: false,
+      errors: {
+        _form: ["Something went wrong updating the course. Please try again."],
+      },
+    };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// deleteCourse – removes a course and all its related data
+// ---------------------------------------------------------------------------
+
+export type DeleteCourseResult =
+  | { success: true }
+  | { success: false; error: string };
+
+export async function deleteCourse(
+  courseId: string,
+): Promise<DeleteCourseResult> {
+  const session = await getSession();
+  if (!session?.user?.id) {
+    return { success: false, error: "Unauthorized." };
+  }
+
+  if (!courseId) {
+    return { success: false, error: "Course ID is required." };
+  }
+
+  try {
+    // Verify ownership before deletion
+    const course = await prisma.course.findUnique({
+      where: { id: courseId },
+      select: {
+        createdById: true,
+        _count: {
+          select: {
+            enrollments: true,
+          },
+        },
+      },
+    });
+
+    if (!course) {
+      return { success: false, error: "Course not found." };
+    }
+
+    if (course.createdById !== session.user.id) {
+      return { success: false, error: "Access denied." };
+    }
+
+    // Optional: prevent deletion if there are active enrollments
+    if (course._count.enrollments > 0) {
+      return {
+        success: false,
+        error: `Cannot delete: ${course._count.enrollments} student${course._count.enrollments === 1 ? " is" : "s are"} enrolled in this course.`,
+      };
+    }
+
+    // Delete the course (cascade should handle sections and lessons)
+    await prisma.course.delete({
+      where: { id: courseId },
+    });
+
+    revalidatePath("/admin/courses");
+    return { success: true };
+  } catch (error) {
+    console.error("[deleteCourse] DB error:", error);
+    return {
+      success: false,
+      error: "Something went wrong deleting the course. Please try again.",
+    };
   }
 }
