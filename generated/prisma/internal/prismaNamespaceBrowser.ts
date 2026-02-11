@@ -61,7 +61,8 @@ export const ModelName = {
   Lesson: 'Lesson',
   Enrollment: 'Enrollment',
   Progress: 'Progress',
-  CourseRating: 'CourseRating'
+  CourseRating: 'CourseRating',
+  SavedCourse: 'SavedCourse'
 } as const
 
 export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -213,6 +214,16 @@ export const CourseRatingScalarFieldEnum = {
 } as const
 
 export type CourseRatingScalarFieldEnum = (typeof CourseRatingScalarFieldEnum)[keyof typeof CourseRatingScalarFieldEnum]
+
+
+export const SavedCourseScalarFieldEnum = {
+  id: 'id',
+  userId: 'userId',
+  courseId: 'courseId',
+  savedAt: 'savedAt'
+} as const
+
+export type SavedCourseScalarFieldEnum = (typeof SavedCourseScalarFieldEnum)[keyof typeof SavedCourseScalarFieldEnum]
 
 
 export const SortOrder = {

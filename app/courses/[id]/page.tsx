@@ -9,34 +9,24 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { isCourseSaved } from "@/server/actions/savedCourse";
+import { SaveButton } from "@/components/save-button";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Users,
   Clock,
   BookOpen,
   Award,
   Share2,
-  Heart,
   PlayCircle,
-  GraduationCap,
 } from "lucide-react";
 import Footer from "@/components/footer";
 import { getPublicCourseById } from "@/server/actions/getPublicCourseById";
+import { formatDuration } from "@/lib/utils/format";
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-/** Convert total minutes → "Xh Ym" or fall back to the admin-set duration in hours */
-function formatDuration(hours: number, totalMinutes?: number): string {
-  if (totalMinutes && totalMinutes > 0) {
-    const h = Math.floor(totalMinutes / 60);
-    const m = totalMinutes % 60;
-    return h > 0 ? `${h}h ${m > 0 ? `${m}m` : ""}`.trim() : `${m}m`;
-  }
-  return `${hours} hours`;
-}
 
 /** Sum all lesson durations (in minutes) across all sections */
 function sumLessonMinutes(
@@ -68,7 +58,11 @@ export default async function CourseDetailPage({
 
   const course = result.data;
   const totalMinutes = sumLessonMinutes(course.sections);
-  const displayDuration = formatDuration(course.duration, totalMinutes);
+  const displayDuration = formatDuration(totalMinutes || course.duration);
+
+  // Check if course is saved
+  const savedResult = await isCourseSaved(id);
+  const isSaved = savedResult.isSaved ?? false;
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -123,29 +117,6 @@ export default async function CourseDetailPage({
                   <span>{course.totalLessons} lessons</span>
                 </div>
               </div>
-
-              {/* Instructor pill */}
-              <div className="flex items-center gap-3">
-                {course.instructor.image ? (
-                  <Image
-                    src={course.instructor.image}
-                    alt={course.instructor.name ?? "Instructor"}
-                    width={40}
-                    height={40}
-                    className="rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                    <GraduationCap className="w-5 h-5 text-primary" />
-                  </div>
-                )}
-                <div>
-                  <p className="text-xs text-muted-foreground">Instructor</p>
-                  <p className="text-sm font-medium text-foreground">
-                    {course.instructor.name ?? "Unknown Instructor"}
-                  </p>
-                </div>
-              </div>
             </div>
 
             {/* Right: sticky enroll card */}
@@ -195,13 +166,12 @@ export default async function CourseDetailPage({
                   </Button>
 
                   <div className="flex gap-2">
-                    <Button
+                    <SaveButton
+                      courseId={id}
+                      initialIsSaved={isSaved}
                       variant="outline"
                       className="flex-1 gap-2 bg-transparent"
-                    >
-                      <Heart className="w-4 h-4" />
-                      Save
-                    </Button>
+                    />
                     <Button
                       variant="outline"
                       className="flex-1 gap-2 bg-transparent"
@@ -218,155 +188,110 @@ export default async function CourseDetailPage({
       </section>
 
       {/* ------------------------------------------------------------------ */}
-      {/* Content Tabs                                                         */}
+      {/* Course Content                                                      */}
       {/* ------------------------------------------------------------------ */}
       <section className="flex-1 px-4 py-12 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-6xl">
-          <Tabs defaultValue="curriculum" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-2 lg:w-auto">
-              <TabsTrigger value="curriculum">Curriculum</TabsTrigger>
-              <TabsTrigger value="about">About</TabsTrigger>
-            </TabsList>
+        <div className="mx-auto max-w-6xl space-y-12">
+          {/* About Section */}
+          <div>
+            <h2 className="text-2xl font-bold text-foreground mb-4">
+              About this course
+            </h2>
+            <p className="text-muted-foreground leading-relaxed whitespace-pre-line">
+              {course.description}
+            </p>
+          </div>
 
-            {/* ---- Curriculum Tab ---------------------------------------- */}
-            <TabsContent value="curriculum" className="space-y-4">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-foreground">
-                  Course Curriculum
-                </h2>
-                <p className="text-sm text-muted-foreground">
-                  {course.sections.length} sections • {course.totalLessons}{" "}
-                  lessons • {displayDuration} total
-                </p>
-              </div>
+          {/* Quick Stats */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+            <div className="rounded-lg border border-border p-4 text-center space-y-1">
+              <Users className="w-6 h-6 text-primary mx-auto" />
+              <p className="font-bold text-lg text-foreground">
+                {course.totalEnrollments.toLocaleString()}
+              </p>
+              <p className="text-xs text-muted-foreground">Students</p>
+            </div>
+            <div className="rounded-lg border border-border p-4 text-center space-y-1">
+              <BookOpen className="w-6 h-6 text-primary mx-auto" />
+              <p className="font-bold text-lg text-foreground">
+                {course.totalLessons}
+              </p>
+              <p className="text-xs text-muted-foreground">Lessons</p>
+            </div>
+            <div className="rounded-lg border border-border p-4 text-center space-y-1">
+              <Clock className="w-6 h-6 text-primary mx-auto" />
+              <p className="font-bold text-lg text-foreground">
+                {displayDuration}
+              </p>
+              <p className="text-xs text-muted-foreground">Duration</p>
+            </div>
+          </div>
 
-              <div className="space-y-3">
-                {course.sections.map((section, i) => (
-                  <Card key={section.id} className="overflow-hidden">
-                    <CardHeader className="pb-3 bg-muted/30">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <CardTitle className="text-base">
-                            <span className="text-muted-foreground mr-2 text-sm">
-                              Section {i + 1}
-                            </span>
-                            {section.title}
-                          </CardTitle>
-                          <CardDescription>
-                            {section.lessons.length} lesson
-                            {section.lessons.length !== 1 ? "s" : ""}
-                            {section.lessons.length > 0 &&
-                              ` • ${formatDuration(
+          {/* Curriculum Section */}
+          <div>
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold text-foreground">
+                Course Curriculum
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                {course.sections.length} sections • {course.totalLessons}{" "}
+                lessons • {displayDuration} total
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              {course.sections.map((section, i) => (
+                <Card key={section.id} className="overflow-hidden">
+                  <CardHeader className="pb-3 bg-muted/30">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <CardTitle className="text-base">
+                          <span className="text-muted-foreground mr-2 text-sm">
+                            Section {i + 1}
+                          </span>
+                          {section.title}
+                        </CardTitle>
+                        <CardDescription>
+                          {section.lessons.length} lesson
+                          {section.lessons.length !== 1 ? "s" : ""}
+                          {section.lessons.length > 0 &&
+                            ` • ${formatDuration(
+                              section.lessons.reduce(
+                                (t, l) => t + (l.duration ?? 0),
                                 0,
-                                section.lessons.reduce(
-                                  (t, l) => t + (l.duration ?? 0),
-                                  0,
-                                ),
-                              )}`}
-                          </CardDescription>
-                        </div>
+                              ),
+                            )}`}
+                        </CardDescription>
                       </div>
-                    </CardHeader>
-
-                    {section.lessons.length > 0 && (
-                      <CardContent className="pt-0 divide-y divide-border">
-                        {section.lessons.map((lesson) => (
-                          <div
-                            key={lesson.id}
-                            className="flex items-center justify-between py-3"
-                          >
-                            <div className="flex items-center gap-3">
-                              <PlayCircle className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                              <span className="text-sm text-foreground">
-                                {lesson.title}
-                              </span>
-                            </div>
-                            {lesson.duration > 0 && (
-                              <span className="text-xs text-muted-foreground ml-4 flex-shrink-0">
-                                {formatDuration(0, lesson.duration)}
-                              </span>
-                            )}
-                          </div>
-                        ))}
-                      </CardContent>
-                    )}
-                  </Card>
-                ))}
-              </div>
-            </TabsContent>
-
-            {/* ---- About Tab --------------------------------------------- */}
-            <TabsContent value="about" className="space-y-8">
-              <div>
-                <h2 className="text-2xl font-bold text-foreground mb-4">
-                  About this course
-                </h2>
-                <p className="text-muted-foreground leading-relaxed whitespace-pre-line">
-                  {course.description}
-                </p>
-              </div>
-
-              {/* Instructor card */}
-              <div>
-                <h3 className="text-xl font-bold text-foreground mb-4">
-                  Your instructor
-                </h3>
-                <div className="flex items-start gap-4">
-                  {course.instructor.image ? (
-                    <Image
-                      src={course.instructor.image}
-                      alt={course.instructor.name ?? "Instructor"}
-                      width={64}
-                      height={64}
-                      className="rounded-full object-cover flex-shrink-0"
-                    />
-                  ) : (
-                    <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <GraduationCap className="w-8 h-8 text-primary" />
                     </div>
-                  )}
-                  <div>
-                    <p className="font-semibold text-foreground text-lg">
-                      {course.instructor.name ?? "Unknown Instructor"}
-                    </p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Course creator
-                    </p>
-                  </div>
-                </div>
-              </div>
+                  </CardHeader>
 
-              {/* Quick stats */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                <div className="rounded-lg border border-border p-4 text-center space-y-1">
-                  <Users className="w-6 h-6 text-primary mx-auto" />
-                  <p className="font-bold text-lg text-foreground">
-                    {course.totalEnrollments.toLocaleString()}
-                  </p>
-                  <p className="text-xs text-muted-foreground">Students</p>
-                </div>
-                <div className="rounded-lg border border-border p-4 text-center space-y-1">
-                  <BookOpen className="w-6 h-6 text-primary mx-auto" />
-                  <p className="font-bold text-lg text-foreground">
-                    {course.totalLessons}
-                  </p>
-                  <p className="text-xs text-muted-foreground">Lessons</p>
-                </div>
-                <div className="rounded-lg border border-border p-4 text-center space-y-1">
-                  <Clock className="w-6 h-6 text-primary mx-auto" />
-                  <p className="font-bold text-lg text-foreground">
-                    {displayDuration}
-                  </p>
-                  <p className="text-xs text-muted-foreground">Duration</p>
-                </div>
-                <div className="rounded-lg border border-border p-4 text-center space-y-1">
-                  <Award className="w-6 h-6 text-primary mx-auto" />
-                  <p className="font-bold text-lg text-foreground">Yes</p>
-                  <p className="text-xs text-muted-foreground">Certificate</p>
-                </div>
-              </div>
-            </TabsContent>
-          </Tabs>
+                  {section.lessons.length > 0 && (
+                    <CardContent className="pt-0 divide-y divide-border">
+                      {section.lessons.map((lesson) => (
+                        <div
+                          key={lesson.id}
+                          className="flex items-center justify-between py-3"
+                        >
+                          <div className="flex items-center gap-3">
+                            <PlayCircle className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                            <span className="text-sm text-foreground">
+                              {lesson.title}
+                            </span>
+                          </div>
+                          {lesson.duration > 0 && (
+                            <span className="text-xs text-muted-foreground ml-4 flex-shrink-0">
+                              {formatDuration(lesson.duration)}
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </CardContent>
+                  )}
+                </Card>
+              ))}
+            </div>
+          </div>
         </div>
       </section>
 

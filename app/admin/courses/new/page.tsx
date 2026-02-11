@@ -693,16 +693,11 @@ export default function CreateCoursePage() {
   // Validation helpers
   // ---------------------------------------------------------------------------
 
-  // Compute total duration in hours from lesson durations (minutes → hours, rounded up, min 1)
-  const computedDuration = Math.max(
-    1,
-    Math.ceil(
-      sections.reduce(
-        (total, sec) =>
-          total + sec.lessons.reduce((sum, l) => sum + (l.duration || 0), 0),
-        0,
-      ) / 60,
-    ),
+  // Compute total duration in minutes by summing all lesson durations
+  const computedDuration = sections.reduce(
+    (total, sec) =>
+      total + sec.lessons.reduce((sum, l) => sum + (l.duration || 0), 0),
+    0,
   );
 
   const basicComplete = title.trim().length > 0;
@@ -997,24 +992,17 @@ export default function CreateCoursePage() {
                     </p>
                     <p>
                       <span className="font-medium">Duration:</span>{" "}
-                      {(() => {
-                        const totalMinutes = sections.reduce(
-                          (total, sec) =>
-                            total +
-                            sec.lessons.reduce(
-                              (sum, l) => sum + (l.duration || 0),
-                              0,
-                            ),
-                          0,
-                        );
-                        return totalMinutes > 0 ? (
-                          `${computedDuration}h (${totalMinutes} min total across lessons)`
+                      {computedDuration > 0 ? (
+                        computedDuration >= 60 ? (
+                          `${Math.floor(computedDuration / 60)}h ${computedDuration % 60 > 0 ? `${computedDuration % 60}min` : ""}`.trim()
                         ) : (
-                          <span className="text-muted-foreground italic">
-                            Will be computed from lesson durations
-                          </span>
-                        );
-                      })()}
+                          `${computedDuration} min`
+                        )
+                      ) : (
+                        <span className="text-muted-foreground italic">
+                          Will be computed from lesson durations
+                        </span>
+                      )}
                     </p>
                     <p>
                       <span className="font-medium">Category:</span>{" "}

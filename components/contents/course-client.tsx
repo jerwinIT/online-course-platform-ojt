@@ -15,12 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Users, Clock, BookOpen, Search } from "lucide-react";
 import type { CourseListItem } from "@/server/actions/course";
-
-// duration is stored as hours by the admin (not minutes)
-function formatDuration(hours: number | null) {
-  if (!hours) return "N/A";
-  return `${hours}h`;
-}
+import { formatDuration } from "@/lib/utils/format";
 
 interface CoursesClientProps {
   courses: CourseListItem[];
@@ -86,7 +81,8 @@ export default function CoursesClient({ courses }: CoursesClientProps) {
                         <Image
                           src={course.image}
                           alt={course.title}
-                          className="w-full h-full object-cover"
+                          fill
+                          className="object-cover"
                         />
                       ) : (
                         <BookOpen className="w-12 h-12 text-primary opacity-40" />

@@ -11,7 +11,7 @@
 // npx prisma migrate reset
 
 // npx prisma migrate dev
-//Compares your schema with the database -- “What changed since the last migration?”
+//Compares your schema with the database -- "What changed since the last migration?"
 
 
 
@@ -37,6 +37,7 @@ model User {
   progress      Progress[]
   courses       Course[]  @relation("AdminCourses")
   courseRatings CourseRating[]
+  savedCourses  SavedCourse[]
   accounts      Account[]
   sessions      Session[]
   createdAt     DateTime  @default(now())
@@ -97,6 +98,7 @@ model Course {
   sections    Section[] 
   enrollments Enrollment[]
   ratings     CourseRating[]
+  savedBy     SavedCourse[]
   createdAt   DateTime       @default(now())
   updatedAt   DateTime       @updatedAt 
 }
@@ -167,4 +169,18 @@ model CourseRating {
   createdAt DateTime @default(now())
 
   @@unique([userId, courseId])
+}
+
+// Saved courses (bookmarks/favorites)
+model SavedCourse {
+  id        String   @id @default(uuid())
+  userId    String
+  courseId  String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  savedAt   DateTime @default(now())
+
+  @@unique([userId, courseId])
+  @@index([userId])
+  @@index([courseId])
 }

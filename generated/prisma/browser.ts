@@ -72,3 +72,8 @@ export type Progress = Prisma.ProgressModel
  * 
  */
 export type CourseRating = Prisma.CourseRatingModel
+/**
+ * Model SavedCourse
+ * 
+ */
+export type SavedCourse = Prisma.SavedCourseModel

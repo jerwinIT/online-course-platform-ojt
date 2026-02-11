@@ -6,6 +6,10 @@ import prisma from "@/lib/prisma";
 import { getSession } from "@/server/actions/getSession";
 
 // ---------------------------------------------------------------------------
+// Shared formatting helpers
+// ---------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------
 // Validation schemas
 // ---------------------------------------------------------------------------
 
@@ -396,6 +400,7 @@ export type CourseListItem = {
   duration: number | null;
   isPublished: boolean;
   createdAt: string;
+  totalLessons: number;
   category: {
     id: string;
     name: string;
@@ -453,6 +458,13 @@ export async function getCourses(): Promise<GetCoursesResult> {
             enrollments: true,
           },
         },
+        sections: {
+          select: {
+            _count: {
+              select: { lessons: true },
+            },
+          },
+        },
       },
       orderBy: {
         createdAt: "desc",
@@ -461,9 +473,10 @@ export async function getCourses(): Promise<GetCoursesResult> {
 
     return {
       success: true,
-      data: courses.map((course) => ({
+      data: courses.map(({ sections, ...course }) => ({
         ...course,
         createdAt: course.createdAt.toISOString(),
+        totalLessons: sections.reduce((sum, s) => sum + s._count.lessons, 0),
       })),
     };
   } catch (error) {

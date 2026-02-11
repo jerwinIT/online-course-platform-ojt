@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -56,7 +57,6 @@ export default function EditCoursePage() {
     subtitle: string;
     image: string;
     description: string;
-    duration: number;
     categoryId: string;
     sections: FormSection[];
   }>({
@@ -64,7 +64,6 @@ export default function EditCoursePage() {
     subtitle: "",
     image: "",
     description: "",
-    duration: 0,
     categoryId: "",
     sections: [],
   });
@@ -100,7 +99,6 @@ export default function EditCoursePage() {
           subtitle: course.subtitle || "",
           image: course.image || "",
           description: course.description,
-          duration: course.duration,
           categoryId: course.categoryId,
           sections: course.sections.map((section) => ({
             title: section.title,
@@ -156,12 +154,18 @@ export default function EditCoursePage() {
       setError(null);
       setFormErrors({});
 
+      const computedDuration = formData.sections.reduce(
+        (total, sec) =>
+          total + sec.lessons.reduce((sum, l) => sum + (l.duration || 0), 0),
+        0,
+      );
+
       const courseFormData: CourseFormData = {
         title: formData.title,
         subtitle: formData.subtitle,
         image: formData.image,
         description: formData.description,
-        duration: formData.duration,
+        duration: computedDuration,
         categoryId: formData.categoryId,
         sections: formData.sections,
       };
@@ -379,7 +383,7 @@ export default function EditCoursePage() {
               >
                 Course Title *
               </label>
-              <input
+              <Input
                 type="text"
                 id="title"
                 name="title"
@@ -405,7 +409,7 @@ export default function EditCoursePage() {
               >
                 Subtitle
               </label>
-              <input
+              <Input
                 type="text"
                 id="subtitle"
                 name="subtitle"
@@ -442,63 +446,35 @@ export default function EditCoursePage() {
               )}
             </div>
 
-            {/* Category and Duration */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label
-                  htmlFor="categoryId"
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  Category *
-                </label>
-                <select
-                  id="categoryId"
-                  name="categoryId"
-                  value={formData.categoryId}
-                  onChange={handleChange}
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                    formErrors.categoryId ? "border-red-500" : "border-gray-300"
-                  }`}
-                >
-                  <option value="">Select a category</option>
-                  {categories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </option>
-                  ))}
-                </select>
-                {formErrors.categoryId && (
-                  <p className="mt-1 text-sm text-red-600">
-                    {formErrors.categoryId[0]}
-                  </p>
-                )}
-              </div>
-
-              <div>
-                <label
-                  htmlFor="duration"
-                  className="block text-sm font-medium text-gray-700 mb-2"
-                >
-                  Duration (hours) *
-                </label>
-                <input
-                  type="number"
-                  id="duration"
-                  name="duration"
-                  value={formData.duration}
-                  onChange={handleChange}
-                  min="1"
-                  className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                    formErrors.duration ? "border-red-500" : "border-gray-300"
-                  }`}
-                  placeholder="e.g., 40"
-                />
-                {formErrors.duration && (
-                  <p className="mt-1 text-sm text-red-600">
-                    {formErrors.duration[0]}
-                  </p>
-                )}
-              </div>
+            {/* Category */}
+            <div>
+              <label
+                htmlFor="categoryId"
+                className="block text-sm font-medium text-gray-700 mb-2"
+              >
+                Category *
+              </label>
+              <select
+                id="categoryId"
+                name="categoryId"
+                value={formData.categoryId}
+                onChange={handleChange}
+                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                  formErrors.categoryId ? "border-red-500" : "border-gray-300"
+                }`}
+              >
+                <option value="">Select a category</option>
+                {categories.map((cat) => (
+                  <option key={cat.id} value={cat.id}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
+              {formErrors.categoryId && (
+                <p className="mt-1 text-sm text-red-600">
+                  {formErrors.categoryId[0]}
+                </p>
+              )}
             </div>
 
             {/* Image URL */}
@@ -509,7 +485,7 @@ export default function EditCoursePage() {
               >
                 Course Image URL
               </label>
-              <input
+              <Input
                 type="url"
                 id="image"
                 name="image"
@@ -524,9 +500,37 @@ export default function EditCoursePage() {
           {/* Course Content - Sections & Lessons */}
           <div className="space-y-6 pt-6 border-t">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-gray-900">
-                Course Content
-              </h2>
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900">
+                  Course Content
+                </h2>
+                {(() => {
+                  const totalMinutes = formData.sections.reduce(
+                    (total, sec) =>
+                      total +
+                      sec.lessons.reduce(
+                        (sum, l) => sum + (l.duration || 0),
+                        0,
+                      ),
+                    0,
+                  );
+                  const display =
+                    totalMinutes >= 60
+                      ? `${Math.floor(totalMinutes / 60)}h${totalMinutes % 60 > 0 ? ` ${totalMinutes % 60}min` : ""}`
+                      : `${totalMinutes} min`;
+                  return (
+                    <p className="text-sm text-gray-500 mt-0.5">
+                      Total duration:{" "}
+                      <span className="font-medium text-gray-700">
+                        {totalMinutes > 0 ? display : "—"}
+                      </span>{" "}
+                      <span className="text-xs text-gray-400">
+                        (computed from lessons, saved on update)
+                      </span>
+                    </p>
+                  );
+                })()}
+              </div>
               <Button type="button" onClick={addSection}>
                 + Add Section
               </Button>
@@ -564,7 +568,7 @@ export default function EditCoursePage() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Section Title *
                   </label>
-                  <input
+                  <Input
                     type="text"
                     value={section.title}
                     onChange={(e) =>
@@ -624,7 +628,7 @@ export default function EditCoursePage() {
                         <label className="block text-xs font-medium text-gray-600 mb-1">
                           Lesson Title *
                         </label>
-                        <input
+                        <Input
                           type="text"
                           value={lesson.title}
                           onChange={(e) =>
@@ -665,7 +669,7 @@ export default function EditCoursePage() {
                           <label className="block text-xs font-medium text-gray-600 mb-1">
                             Video URL
                           </label>
-                          <input
+                          <Input
                             type="url"
                             value={lesson.videoUrl}
                             onChange={(e) =>
@@ -685,7 +689,7 @@ export default function EditCoursePage() {
                           <label className="block text-xs font-medium text-gray-600 mb-1">
                             Duration (minutes)
                           </label>
-                          <input
+                          <Input
                             type="number"
                             value={lesson.duration}
                             onChange={(e) =>

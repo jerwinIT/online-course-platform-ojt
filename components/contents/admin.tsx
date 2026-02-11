@@ -67,8 +67,6 @@ import {
   Eye,
   Search,
   Filter,
-  Settings,
-  LogOut,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import Footer from "@/components/footer";
@@ -124,6 +122,7 @@ export default function AdminContent() {
       // Refresh the courses list
       const list = await getAdminCourses();
       setCourses(list);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       toast.error("Failed to delete course");
     } finally {
@@ -171,17 +170,6 @@ export default function AdminContent() {
               <p className="text-muted-foreground mt-2">
                 Manage courses, users, and platform settings
               </p>
-            </div>
-            <div className="flex gap-3">
-              <Link href="/settings">
-                <Button variant="outline" size="icon">
-                  <Settings className="w-4 h-4" />
-                </Button>
-              </Link>
-              <Button variant="outline">
-                <LogOut className="w-4 h-4 mr-2" />
-                Log Out
-              </Button>
             </div>
           </div>
         </div>
