@@ -61,16 +61,18 @@ export default function Navbar() {
             >
               Courses
             </Link>
-            <Link
-              href="/dashboard"
-              className={`transition-colors border-b-2 ${
-                pathname.startsWith("/dashboard")
-                  ? "text-primary border-primary"
-                  : "text-foreground border-transparent hover:text-primary"
-              }`}
-            >
-              Dashboard
-            </Link>
+            {isAuthenticated && (
+              <Link
+                href="/dashboard"
+                className={`transition-colors border-b-2 ${
+                  pathname.startsWith("/dashboard")
+                    ? "text-primary border-primary"
+                    : "text-foreground border-transparent hover:text-primary"
+                }`}
+              >
+                Dashboard
+              </Link>
+            )}
             <Link
               href="/about"
               className={`transition-colors border-b-2 ${
@@ -168,17 +170,19 @@ export default function Navbar() {
               Courses
             </Link>
 
-            <Link
-              href="/dashboard"
-              className={`block px-4 py-2 rounded-lg transition ${
-                pathname.startsWith("/dashboard")
-                  ? "bg-primary/10 text-primary font-medium"
-                  : "text-foreground hover:bg-secondary"
-              }`}
-              onClick={() => setIsOpen(false)}
-            >
-              Dashboard
-            </Link>
+            {isAuthenticated && (
+              <Link
+                href="/dashboard"
+                className={`block px-4 py-2 rounded-lg transition ${
+                  pathname.startsWith("/dashboard")
+                    ? "bg-primary/10 text-primary font-medium"
+                    : "text-foreground hover:bg-secondary"
+                }`}
+                onClick={() => setIsOpen(false)}
+              >
+                Dashboard
+              </Link>
+            )}
             <Link
               href="/about"
               className={`block px-4 py-2 rounded-lg transition ${
