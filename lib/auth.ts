@@ -17,7 +17,7 @@ export const authOptions: NextAuthOptions = {
       clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
       authorization: {
         params: {
-          hd: "batste-u.edu.ph", // UI restriction only
+          hd: "g.batstate-u.edu.ph", // UI restriction only
         },
       },
     }),
@@ -30,7 +30,7 @@ export const authOptions: NextAuthOptions = {
 
       const domain = user.email.split("@")[1];
 
-      if (domain !== "batste-u.edu.ph") {
+      if (domain !== "g.batstate-u.edu.ph") {
         return false; // Block non-school emails
       }
 
