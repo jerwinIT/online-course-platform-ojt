@@ -231,7 +231,7 @@ export default function CourseDetailContent({
       {/* Hero                                                                */}
       {/* ------------------------------------------------------------------ */}
       <section className="bg-gradient-to-br from-primary/5 to-accent/5 border-b border-border px-4 py-12 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-6xl">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           <Link
             href="/courses"
             className="text-primary hover:underline text-sm mb-4 inline-block"
@@ -362,7 +362,7 @@ export default function CourseDetailContent({
       {/* Body                                                                */}
       {/* ------------------------------------------------------------------ */}
       <section className="flex-1 px-4 py-12 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-6xl space-y-12">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 space-y-12">
           {/* About */}
           <div>
             <h2 className="text-2xl font-bold text-foreground mb-4">

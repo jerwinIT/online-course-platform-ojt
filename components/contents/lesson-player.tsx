@@ -257,7 +257,7 @@ export default function LessonPlayerContent({
 
           {/* Center: progress */}
           <div className="flex items-center gap-2 flex-shrink-0">
-            <div className="hidden sm:flex items-center gap-2">
+            <div className="hidden sm:flex items-center gap-2 ">
               <div className="w-24 bg-secondary rounded-full h-1.5 overflow-hidden">
                 <div
                   className="bg-primary h-full rounded-full transition-all duration-500"
