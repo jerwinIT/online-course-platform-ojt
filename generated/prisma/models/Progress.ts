@@ -409,6 +409,10 @@ export type ProgressUncheckedUpdateManyWithoutLessonNestedInput = {
   deleteMany?: Prisma.ProgressScalarWhereInput | Prisma.ProgressScalarWhereInput[]
 }
 
+export type NullableDateTimeFieldUpdateOperationsInput = {
+  set?: Date | string | null
+}
+
 export type ProgressCreateWithoutUserInput = {
   id?: string
   completed?: boolean
