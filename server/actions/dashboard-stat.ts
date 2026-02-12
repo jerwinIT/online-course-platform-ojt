@@ -145,6 +145,102 @@ export async function getRecentEnrollments() {
 }
 
 // ---------------------------------------------------------------------------
+// getNewUsersTrend
+// Returns daily count of new users (role STUDENT) for the last N days.
+// ---------------------------------------------------------------------------
+
+export type NewUsersTrendItem = { date: string; users: number };
+
+export async function getNewUsersTrend(
+  days = 30,
+): Promise<NewUsersTrendItem[]> {
+  const end = new Date();
+  const start = new Date();
+  start.setDate(start.getDate() - days);
+  start.setUTCHours(0, 0, 0, 0);
+
+  const users = await prisma.user.findMany({
+    where: {
+      role: Role.STUDENT,
+      createdAt: { gte: start, lte: end },
+    },
+    select: { createdAt: true },
+  });
+
+  const countByDate: Record<string, number> = {};
+  for (let d = 0; d < days; d++) {
+    const dte = new Date(start);
+    dte.setDate(dte.getDate() + d);
+    countByDate[dte.toISOString().slice(0, 10)] = 0;
+  }
+  for (const u of users) {
+    const key = new Date(u.createdAt).toISOString().slice(0, 10);
+    if (countByDate[key] !== undefined) countByDate[key]++;
+  }
+
+  return Object.entries(countByDate)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([date, count]) => ({ date, users: count }));
+}
+
+// ---------------------------------------------------------------------------
+// getEnrollmentTrendsByCourse
+// Returns daily enrollment counts per course for the last N days (stacked area).
+// ---------------------------------------------------------------------------
+
+export type EnrollmentTrendByCourse = {
+  data: ({ date: string } & Record<string, number>)[];
+  courses: { id: string; title: string }[];
+};
+
+export async function getEnrollmentTrendsByCourse(
+  days = 30,
+): Promise<EnrollmentTrendByCourse> {
+  const end = new Date();
+  const start = new Date();
+  start.setDate(start.getDate() - days);
+  start.setUTCHours(0, 0, 0, 0);
+
+  const enrollments = await prisma.enrollment.findMany({
+    where: { enrolledAt: { gte: start, lte: end } },
+    select: {
+      enrolledAt: true,
+      courseId: true,
+      course: { select: { id: true, title: true } },
+    },
+  });
+
+  const courseList = Array.from(
+    new Map(
+      enrollments.map((e) => [e.courseId, { id: e.course.id, title: e.course.title }]),
+    ).values(),
+  );
+
+  const countByDateAndCourse: Record<string, Record<string, number>> = {};
+  for (let d = 0; d < days; d++) {
+    const dte = new Date(start);
+    dte.setDate(dte.getDate() + d);
+    const key = dte.toISOString().slice(0, 10);
+    countByDateAndCourse[key] = {};
+    for (const c of courseList) {
+      countByDateAndCourse[key][c.id] = 0;
+    }
+  }
+  for (const e of enrollments) {
+    const dateKey = new Date(e.enrolledAt).toISOString().slice(0, 10);
+    if (countByDateAndCourse[dateKey] && countByDateAndCourse[dateKey][e.courseId] !== undefined) {
+      countByDateAndCourse[dateKey][e.courseId]++;
+    }
+  }
+
+  const data = Object.entries(countByDateAndCourse)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([date, byCourse]) => ({ date, ...byCourse })) as EnrollmentTrendByCourse["data"];
+
+  return { data, courses: courseList };
+}
+
+// ---------------------------------------------------------------------------
 // getPlatformPerformance
 //
 // FIX: The completion rate was calculated as:

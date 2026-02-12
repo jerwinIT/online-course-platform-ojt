@@ -50,8 +50,8 @@ export default async function SavedCoursesPage() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <section className="bg-secondary border-b border-border px-4 py-12 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-6xl">
+      <section className="bg-secondary border-b border-border py-12">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           <h1 className="text-4xl sm:text-5xl font-bold text-foreground mb-4">
             Saved Courses
           </h1>
@@ -61,8 +61,8 @@ export default async function SavedCoursesPage() {
         </div>
       </section>
 
-      <section className="flex-1 px-4 py-12 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-6xl">
+      <section className="flex-1 py-12">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           {savedCourses && savedCourses.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {savedCourses.map((course) => (

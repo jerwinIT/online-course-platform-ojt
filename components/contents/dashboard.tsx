@@ -51,8 +51,8 @@ export default function DashboardContent({ data }: DashboardContentProps) {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Dashboard Header */}
-      <section className="bg-gradient-to-r from-primary/10 to-accent/10 border-b border-border px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-6xl">
+      <section className="bg-secondary border-b border-border py-12">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <div className="relative w-14 h-14 rounded-full overflow-hidden bg-muted flex-shrink-0 ring-2 ring-border">
@@ -84,8 +84,8 @@ export default function DashboardContent({ data }: DashboardContentProps) {
       </section>
 
       {/* Main Content */}
-      <section className="flex-1 px-4 py-12 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-6xl space-y-8">
+      <section className="flex-1 py-12">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 space-y-8">
           {/* Stats Cards */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <Card>

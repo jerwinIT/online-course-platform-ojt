@@ -76,7 +76,7 @@ export function LoginForm({
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4">
+    <div className="h-[calc(100vh-4rem)] min-h-0 flex items-center justify-center overflow-y-auto px-4 bg-background">
       <div className="w-full max-w-md space-y-8">
         <Link
           href="/"

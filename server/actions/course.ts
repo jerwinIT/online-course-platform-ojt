@@ -777,7 +777,7 @@ export async function deleteCourse(
       where: { id: courseId },
     });
 
-    revalidatePath("/admin/courses");
+    revalidatePath("/admin?tab=courses");
     return { success: true };
   } catch (error) {
     console.error("[deleteCourse] DB error:", error);

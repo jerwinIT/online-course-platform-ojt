@@ -8,8 +8,8 @@ export default async function CoursesPage() {
   if (!result.success) {
     return (
       <div className="min-h-screen bg-background flex flex-col">
-        <section className="bg-secondary border-b border-border px-4 py-12 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-6xl">
+        <section className="bg-secondary border-b border-border py-12">
+          <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
             <h1 className="text-4xl sm:text-5xl font-bold text-foreground mb-4">
               Explore Courses
             </h1>
@@ -19,8 +19,8 @@ export default async function CoursesPage() {
             </p>
           </div>
         </section>
-        <section className="flex-1 px-4 py-12 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-6xl text-center py-12">
+        <section className="flex-1 py-12">
+          <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 text-center py-12">
             <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-6 max-w-md mx-auto">
               <h3 className="text-lg font-semibold text-destructive mb-2">
                 Error Loading Courses
@@ -36,8 +36,8 @@ export default async function CoursesPage() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <section className="bg-secondary border-b border-border px-4 py-12 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-6xl">
+      <section className="bg-secondary border-b border-border py-12">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           <h1 className="text-4xl sm:text-5xl font-bold text-foreground mb-4">
             Explore Courses
           </h1>
@@ -46,8 +46,6 @@ export default async function CoursesPage() {
           </p>
         </div>
       </section>
-
-      {/* Delegate all interactivity (search/filter) to a client component */}
       <CoursesClient courses={result.data} />
 
       <Footer />

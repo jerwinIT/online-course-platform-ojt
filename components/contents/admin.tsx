@@ -5,9 +5,13 @@ import {
   getPlatformPerformance,
   getAdminCourses,
   getAdminUsers,
+  // getNewUsersTrend,
+  // getEnrollmentTrendsByCourse,
   type PlatformPerformance,
   type AdminCourseItem,
   type AdminUserItem,
+  // type NewUsersTrendItem,
+  type EnrollmentTrendByCourse,
 } from "@/server/actions/dashboard-stat";
 import { deleteCourse } from "@/server/actions/course";
 import { useEffect, useState } from "react";
@@ -69,6 +73,22 @@ import {
   Filter,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+// import {
+//   ChartContainer,
+//   ChartLegend,
+//   ChartLegendContent,
+//   ChartTooltip,
+//   ChartTooltipContent,
+//   type ChartConfig,
+// } from "@/components/ui/chart";
+// import {
+//   Area,
+//   AreaChart,
+//   CartesianGrid,
+//   Line,
+//   LineChart,
+//   XAxis,
+// } from "recharts";
 import Footer from "@/components/footer";
 import { useSearchParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -107,6 +127,9 @@ export default function AdminContent() {
   const [users, setUsers] = useState<AdminUserItem[]>([]);
   const [userSearchQuery, setUserSearchQuery] = useState("");
   const [deletingCourseId, setDeletingCourseId] = useState<string | null>(null);
+  // const [newUsersTrend, setNewUsersTrend] = useState<NewUsersTrendItem[]>([]);
+  // const [enrollmentTrends, setEnrollmentTrends] =
+  useState<EnrollmentTrendByCourse | null>(null);
 
   const handleDeleteCourse = async (courseId: string) => {
     try {
@@ -119,9 +142,13 @@ export default function AdminContent() {
       }
 
       toast.success("Course deleted successfully!");
-      // Refresh the courses list
-      const list = await getAdminCourses();
+      // Refresh the courses list and stats so the stats cards reflect the deletion
+      const [list, newStats] = await Promise.all([
+        getAdminCourses(),
+        getDashboardStats(),
+      ]);
       setCourses(list);
+      setStats(newStats);
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       toast.error("Failed to delete course");
@@ -157,11 +184,27 @@ export default function AdminContent() {
     };
     fetchUsers();
   }, []);
+  // useEffect(() => {
+  //   if (tab !== "analytics") return;
+  //   const fetchAnalytics = async () => {
+  //     const [usersTrend, enrollTrends] = await Promise.all([
+  //       getNewUsersTrend(30),
+  //       getEnrollmentTrendsByCourse(30),
+  //     ]);
+  //     setNewUsersTrend(usersTrend);
+  //     setEnrollmentTrends(enrollTrends);
+  //   };
+  //   fetchAnalytics();
+  // }, [tab]);
+  // const newUsersChartConfig = {
+  //   date: { label: "Date" },
+  //   users: { label: "New Users", color: "var(--chart-1)" },
+  // } satisfies ChartConfig;
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Admin Header */}
-      <section className="bg-gradient-to-r from-primary/10 to-accent/10 border-b border-border px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-6xl">
+      <section className="bg-secondary border-b border-border py-12">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
               <h1 className="text-3xl sm:text-4xl font-bold text-foreground">
@@ -176,8 +219,8 @@ export default function AdminContent() {
       </section>
 
       {/* Main Content */}
-      <section className="flex-1 px-4 py-12 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-6xl space-y-8">
+      <section className="flex-1 py-12">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 space-y-8">
           {/* Stats Cards */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <Card>
@@ -245,7 +288,7 @@ export default function AdminContent() {
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="courses">Courses</TabsTrigger>
               <TabsTrigger value="users">Users</TabsTrigger>
-              <TabsTrigger value="analytics">Analytics</TabsTrigger>
+              {/* <TabsTrigger value="analytics">Analytics</TabsTrigger> */}
             </TabsList>
 
             {/* Overview Tab */}
@@ -370,7 +413,7 @@ export default function AdminContent() {
                     <TableHead className="px-4">Students</TableHead>
                     <TableHead className="px-4">Rating</TableHead>
                     <TableHead className="px-4">Created</TableHead>
-                    <TableHead className="px-4 text-right">Actions</TableHead>
+                    <TableHead className="px-4 text-center">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -409,7 +452,7 @@ export default function AdminContent() {
                         </TableCell>
                         <TableCell className="px-4 text-right">
                           <div className="flex justify-end gap-2">
-                            <Link href={`/admin/courses/${course.id}`}>
+                            <Link href={`/courses/${course.id}`}>
                               <Button size="icon" variant="ghost">
                                 <Eye className="w-4 h-4" />
                               </Button>
@@ -611,7 +654,7 @@ export default function AdminContent() {
             </TabsContent>
 
             {/* Analytics Tab */}
-            <TabsContent value="analytics" className="space-y-6">
+            {/* <TabsContent value="analytics" className="space-y-6">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <Card>
                   <CardHeader>
@@ -621,24 +664,156 @@ export default function AdminContent() {
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="h-48 bg-secondary rounded-lg flex items-center justify-center">
-                      <p className="text-muted-foreground">Chart placeholder</p>
-                    </div>
+                    <ChartContainer
+                      config={newUsersChartConfig}
+                      className="aspect-auto h-[250px] w-full"
+                    >
+                      <LineChart
+                        accessibilityLayer
+                        data={newUsersTrend}
+                        margin={{ left: 12, right: 12 }}
+                      >
+                        <CartesianGrid vertical={false} />
+                        <XAxis
+                          dataKey="date"
+                          tickLine={false}
+                          axisLine={false}
+                          tickMargin={8}
+                          minTickGap={32}
+                          tickFormatter={(value) => {
+                            const date = new Date(value);
+                            return date.toLocaleDateString("en-US", {
+                              month: "short",
+                              day: "numeric",
+                            });
+                          }}
+                        />
+                        <ChartTooltip
+                          content={
+                            <ChartTooltipContent
+                              labelFormatter={(value) =>
+                                new Date(value).toLocaleDateString("en-US", {
+                                  month: "short",
+                                  day: "numeric",
+                                  year: "numeric",
+                                })
+                              }
+                            />
+                          }
+                        />
+                        <Line
+                          dataKey="users"
+                          type="monotone"
+                          stroke="var(--color-users)"
+                          strokeWidth={2}
+                          dot={false}
+                        />
+                      </LineChart>
+                    </ChartContainer>
                   </CardContent>
                 </Card>
                 <Card>
                   <CardHeader>
                     <CardTitle>Enrollment Trends</CardTitle>
-                    <CardDescription>Last 30 days</CardDescription>
+                    <CardDescription>
+                      Last 30 days by course
+                    </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="h-48 bg-secondary rounded-lg flex items-center justify-center">
-                      <p className="text-muted-foreground">Chart placeholder</p>
-                    </div>
+                    {enrollmentTrends &&
+                    enrollmentTrends.courses.length > 0 ? (
+                      <ChartContainer
+                        config={
+                          enrollmentTrends.courses.reduce(
+                            (acc, c, i) => {
+                              acc[c.id] = {
+                                label: c.title,
+                                color: `var(--chart-${(i % 5) + 1})`,
+                              };
+                              return acc;
+                            },
+                            { date: { label: "Date" } } as ChartConfig,
+                          )
+                        }
+                        className="aspect-auto h-[250px] w-full"
+                      >
+                        <AreaChart data={enrollmentTrends.data ?? []}>
+                          <defs>
+                            {enrollmentTrends.courses.map((c, i) => (
+                              <linearGradient
+                                key={c.id}
+                                id={`fill-${c.id}`}
+                                x1="0"
+                                y1="0"
+                                x2="0"
+                                y2="1"
+                              >
+                                <stop
+                                  offset="5%"
+                                  stopColor={`var(--chart-${(i % 5) + 1})`}
+                                  stopOpacity={0.8}
+                                />
+                                <stop
+                                  offset="95%"
+                                  stopColor={`var(--chart-${(i % 5) + 1})`}
+                                  stopOpacity={0.1}
+                                />
+                              </linearGradient>
+                            ))}
+                          </defs>
+                          <CartesianGrid vertical={false} />
+                          <XAxis
+                            dataKey="date"
+                            tickLine={false}
+                            axisLine={false}
+                            tickMargin={8}
+                            minTickGap={32}
+                            tickFormatter={(value) => {
+                              const date = new Date(value);
+                              return date.toLocaleDateString("en-US", {
+                                month: "short",
+                                day: "numeric",
+                              });
+                            }}
+                          />
+                          <ChartTooltip
+                            cursor={false}
+                            content={
+                              <ChartTooltipContent
+                                labelFormatter={(value) =>
+                                  new Date(value).toLocaleDateString("en-US", {
+                                    month: "short",
+                                    day: "numeric",
+                                  })
+                                }
+                                indicator="dot"
+                              />
+                            }
+                          />
+                          {enrollmentTrends.courses.map((c, i) => (
+                            <Area
+                              key={c.id}
+                              dataKey={c.id}
+                              type="natural"
+                              fill={`url(#fill-${c.id})`}
+                              stroke={`var(--chart-${(i % 5) + 1})`}
+                              stackId="a"
+                            />
+                          ))}
+                          <ChartLegend content={<ChartLegendContent />} />
+                        </AreaChart>
+                      </ChartContainer>
+                    ) : (
+                      <div className="h-[250px] rounded-lg bg-secondary flex items-center justify-center">
+                        <p className="text-muted-foreground text-sm">
+                          No enrollment data in the last 30 days
+                        </p>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </div>
-            </TabsContent>
+            </TabsContent> */}
           </Tabs>
         </div>
       </section>

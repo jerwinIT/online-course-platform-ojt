@@ -706,22 +706,21 @@ export default function CreateCoursePage() {
   const curriculumComplete = sections.every((s) => s.title.trim().length > 0);
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col">
-      <section className="flex-1 container max-w-4xl mx-auto px-4 py-12">
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <Link
-              href="/admin?tab=courses"
-              className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1 mb-2"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Back to Courses
-            </Link>
-            <h1 className="text-3xl font-bold">Create New Course</h1>
-            <p className="text-muted-foreground mt-1">
-              Build your course step by step
-            </p>
-          </div>
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+        {/* Header */}
+        <div className="mb-8">
+          <Link
+            href="/admin?tab=courses"
+            className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1 mb-2"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Back to Courses
+          </Link>
+          <h1 className="text-3xl font-bold">Create New Course</h1>
+          <p className="text-muted-foreground mt-1">
+            Build your course step by step
+          </p>
         </div>
 
         <div className="space-y-6">
@@ -1142,8 +1141,7 @@ export default function CreateCoursePage() {
             </TabsContent>
           </Tabs>
         </div>
-      </section>
-      <Footer />
+      </div>
     </div>
   );
 }
