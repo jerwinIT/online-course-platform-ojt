@@ -5,15 +5,13 @@ import {
   getPlatformPerformance,
   getAdminCourses,
   getAdminUsers,
-  // getNewUsersTrend,
-  // getEnrollmentTrendsByCourse,
   type PlatformPerformance,
   type AdminCourseItem,
   type AdminUserItem,
-  // type NewUsersTrendItem,
   type EnrollmentTrendByCourse,
 } from "@/server/actions/dashboard-stat";
 import { deleteCourse } from "@/server/actions/course";
+import { deleteUser } from "@/server/actions/user";
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -73,22 +71,7 @@ import {
   Filter,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
-// import {
-//   ChartContainer,
-//   ChartLegend,
-//   ChartLegendContent,
-//   ChartTooltip,
-//   ChartTooltipContent,
-//   type ChartConfig,
-// } from "@/components/ui/chart";
-// import {
-//   Area,
-//   AreaChart,
-//   CartesianGrid,
-//   Line,
-//   LineChart,
-//   XAxis,
-// } from "recharts";
+
 import Footer from "@/components/footer";
 import { useSearchParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -127,8 +110,7 @@ export default function AdminContent() {
   const [users, setUsers] = useState<AdminUserItem[]>([]);
   const [userSearchQuery, setUserSearchQuery] = useState("");
   const [deletingCourseId, setDeletingCourseId] = useState<string | null>(null);
-  // const [newUsersTrend, setNewUsersTrend] = useState<NewUsersTrendItem[]>([]);
-  // const [enrollmentTrends, setEnrollmentTrends] =
+  const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
   useState<EnrollmentTrendByCourse | null>(null);
 
   const handleDeleteCourse = async (courseId: string) => {
@@ -154,6 +136,32 @@ export default function AdminContent() {
       toast.error("Failed to delete course");
     } finally {
       setDeletingCourseId(null);
+    }
+  };
+
+  const handleDeleteUser = async (userId: string) => {
+    try {
+      setDeletingUserId(userId);
+      const result = await deleteUser(userId);
+
+      if (!result.success) {
+        toast.error(result.error);
+        return;
+      }
+
+      toast.success("User deleted successfully!");
+      // Refresh the users list and stats
+      const [list, newStats] = await Promise.all([
+        getAdminUsers(),
+        getDashboardStats(),
+      ]);
+      setUsers(list);
+      setStats(newStats);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (error) {
+      toast.error("Failed to delete user");
+    } finally {
+      setDeletingUserId(null);
     }
   };
   useEffect(() => {
@@ -184,22 +192,7 @@ export default function AdminContent() {
     };
     fetchUsers();
   }, []);
-  // useEffect(() => {
-  //   if (tab !== "analytics") return;
-  //   const fetchAnalytics = async () => {
-  //     const [usersTrend, enrollTrends] = await Promise.all([
-  //       getNewUsersTrend(30),
-  //       getEnrollmentTrendsByCourse(30),
-  //     ]);
-  //     setNewUsersTrend(usersTrend);
-  //     setEnrollmentTrends(enrollTrends);
-  //   };
-  //   fetchAnalytics();
-  // }, [tab]);
-  // const newUsersChartConfig = {
-  //   date: { label: "Date" },
-  //   users: { label: "New Users", color: "var(--chart-1)" },
-  // } satisfies ChartConfig;
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Admin Header */}
@@ -625,6 +618,40 @@ export default function AdminContent() {
                                 </div>
                               </DialogContent>
                             </Dialog>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  className="text-destructive"
+                                  disabled={deletingUserId === user.id}
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>
+                                    Delete User
+                                  </AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    Are you sure you want to delete &quot;
+                                    {user.name || user.email}&quot;? This action
+                                    cannot be undone and will remove all user
+                                    data and enrollments.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction
+                                    onClick={() => handleDeleteUser(user.id)}
+                                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                  >
+                                    Delete
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
                           </div>
                         </TableCell>
                       </TableRow>
@@ -632,168 +659,6 @@ export default function AdminContent() {
                 </TableBody>
               </Table>
             </TabsContent>
-
-            {/* Analytics Tab */}
-            {/* <TabsContent value="analytics" className="space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <Card>
-                  <CardHeader>
-                    <CardTitle>New Users</CardTitle>
-                    <CardDescription>
-                      New users in the last 30 days
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <ChartContainer
-                      config={newUsersChartConfig}
-                      className="aspect-auto h-[250px] w-full"
-                    >
-                      <LineChart
-                        accessibilityLayer
-                        data={newUsersTrend}
-                        margin={{ left: 12, right: 12 }}
-                      >
-                        <CartesianGrid vertical={false} />
-                        <XAxis
-                          dataKey="date"
-                          tickLine={false}
-                          axisLine={false}
-                          tickMargin={8}
-                          minTickGap={32}
-                          tickFormatter={(value) => {
-                            const date = new Date(value);
-                            return date.toLocaleDateString("en-US", {
-                              month: "short",
-                              day: "numeric",
-                            });
-                          }}
-                        />
-                        <ChartTooltip
-                          content={
-                            <ChartTooltipContent
-                              labelFormatter={(value) =>
-                                new Date(value).toLocaleDateString("en-US", {
-                                  month: "short",
-                                  day: "numeric",
-                                  year: "numeric",
-                                })
-                              }
-                            />
-                          }
-                        />
-                        <Line
-                          dataKey="users"
-                          type="monotone"
-                          stroke="var(--color-users)"
-                          strokeWidth={2}
-                          dot={false}
-                        />
-                      </LineChart>
-                    </ChartContainer>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Enrollment Trends</CardTitle>
-                    <CardDescription>
-                      Last 30 days by course
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    {enrollmentTrends &&
-                    enrollmentTrends.courses.length > 0 ? (
-                      <ChartContainer
-                        config={
-                          enrollmentTrends.courses.reduce(
-                            (acc, c, i) => {
-                              acc[c.id] = {
-                                label: c.title,
-                                color: `var(--chart-${(i % 5) + 1})`,
-                              };
-                              return acc;
-                            },
-                            { date: { label: "Date" } } as ChartConfig,
-                          )
-                        }
-                        className="aspect-auto h-[250px] w-full"
-                      >
-                        <AreaChart data={enrollmentTrends.data ?? []}>
-                          <defs>
-                            {enrollmentTrends.courses.map((c, i) => (
-                              <linearGradient
-                                key={c.id}
-                                id={`fill-${c.id}`}
-                                x1="0"
-                                y1="0"
-                                x2="0"
-                                y2="1"
-                              >
-                                <stop
-                                  offset="5%"
-                                  stopColor={`var(--chart-${(i % 5) + 1})`}
-                                  stopOpacity={0.8}
-                                />
-                                <stop
-                                  offset="95%"
-                                  stopColor={`var(--chart-${(i % 5) + 1})`}
-                                  stopOpacity={0.1}
-                                />
-                              </linearGradient>
-                            ))}
-                          </defs>
-                          <CartesianGrid vertical={false} />
-                          <XAxis
-                            dataKey="date"
-                            tickLine={false}
-                            axisLine={false}
-                            tickMargin={8}
-                            minTickGap={32}
-                            tickFormatter={(value) => {
-                              const date = new Date(value);
-                              return date.toLocaleDateString("en-US", {
-                                month: "short",
-                                day: "numeric",
-                              });
-                            }}
-                          />
-                          <ChartTooltip
-                            cursor={false}
-                            content={
-                              <ChartTooltipContent
-                                labelFormatter={(value) =>
-                                  new Date(value).toLocaleDateString("en-US", {
-                                    month: "short",
-                                    day: "numeric",
-                                  })
-                                }
-                                indicator="dot"
-                              />
-                            }
-                          />
-                          {enrollmentTrends.courses.map((c, i) => (
-                            <Area
-                              key={c.id}
-                              dataKey={c.id}
-                              type="natural"
-                              fill={`url(#fill-${c.id})`}
-                              stroke={`var(--chart-${(i % 5) + 1})`}
-                              stackId="a"
-                            />
-                          ))}
-                          <ChartLegend content={<ChartLegendContent />} />
-                        </AreaChart>
-                      </ChartContainer>
-                    ) : (
-                      <div className="h-[250px] rounded-lg bg-secondary flex items-center justify-center">
-                        <p className="text-muted-foreground text-sm">
-                          No enrollment data in the last 30 days
-                        </p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent> */}
           </Tabs>
         </div>
       </section>
