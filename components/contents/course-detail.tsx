@@ -59,7 +59,7 @@ function EnrollButton({
 
   function handleEnroll() {
     if (!isAuthenticated) {
-      router.push("/auth/signup");
+      router.push("/");
       return;
     }
 

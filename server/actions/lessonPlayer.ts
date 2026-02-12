@@ -45,7 +45,7 @@ export async function getLessonPlayerData(
   const session = await getSession();
 
   if (!session?.user) {
-    redirect("/auth/signup");
+    redirect("/");
   }
 
   const userId = session.user.id;

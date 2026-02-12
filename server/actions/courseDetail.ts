@@ -159,7 +159,7 @@ export async function enrollInCourse(
   const session = await getSession();
 
   if (!session?.user) {
-    redirect("/auth/signup");
+    redirect("/");
   }
 
   const userId = session.user.id;
