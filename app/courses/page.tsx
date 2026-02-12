@@ -3,8 +3,27 @@ import Footer from "@/components/footer";
 import { getCourses } from "@/server/actions/course";
 import CoursesClient from "@/components/contents/course-client";
 
-export default async function CoursesPage() {
-  const result = await getCourses();
+interface CoursesPageProps {
+  searchParams: {
+    page?: string;
+    search?: string;
+    category?: string;
+  };
+}
+
+export default async function CoursesPage({ searchParams }: CoursesPageProps) {
+  // Parse search params
+  const page = searchParams.page ? parseInt(searchParams.page) : 1;
+  const search = searchParams.search || "";
+  const categorySlug = searchParams.category || undefined;
+
+  // Fetch courses with pagination
+  const result = await getCourses({
+    page,
+    search,
+    categorySlug,
+    limit: 12, // Optional: override default limit
+  });
 
   if (!result.success) {
     return (
@@ -48,7 +67,12 @@ export default async function CoursesPage() {
         </div>
       </section>
       <Suspense fallback={<CoursesLoadingSkeleton />}>
-        <CoursesClient courses={result.data} />
+        <CoursesClient
+          courses={result.data}
+          totalPages={result.totalPages}
+          currentPage={result.currentPage}
+          totalCount={result.totalCount}
+        />
       </Suspense>
 
       <Footer />
