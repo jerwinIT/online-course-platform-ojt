@@ -139,7 +139,11 @@ export default function Navbar() {
             ) : (
               <>
                 {/* <img src="/google.svg" alt="Google" className="w-5 h-5" /> */}
-                <Button onClick={() => signIn("google")}>
+                <Button
+                  onClick={() =>
+                    signIn("google", { callbackUrl: "/dashboard" })
+                  }
+                >
                   Continue with Gsuite
                 </Button>
               </>
@@ -233,7 +237,7 @@ export default function Navbar() {
                     className="w-full"
                     onClick={() => {
                       setIsOpen(false);
-                      signIn("google");
+                      signIn("google", { callbackUrl: "/dashboard" });
                     }}
                   >
                     Continue with Gsuite

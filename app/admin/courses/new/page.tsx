@@ -40,7 +40,6 @@ import {
   X,
   Loader2,
 } from "lucide-react";
-import Footer from "@/components/footer";
 import {
   createCourse,
   publishCourse,
@@ -599,43 +598,6 @@ export default function CreateCoursePage() {
     } finally {
       setUploadingImage(false);
     }
-  };
-
-  // ---------------------------------------------------------------------------
-  // Handlers: save / publish
-  // ---------------------------------------------------------------------------
-
-  const handleSave = async () => {
-    setFormErrors({});
-
-    const payload: CourseFormData = {
-      title,
-      subtitle,
-      image: imageUrl,
-      description,
-      duration: computedDuration,
-      categoryId,
-      sections: sections.map((sec, sIdx) => ({
-        title: sec.title,
-        order: sIdx,
-        lessons: sec.lessons.map((lesson, lIdx) => ({
-          title: lesson.title,
-          content: lesson.content,
-          videoUrl: lesson.videoUrl,
-          duration: lesson.duration,
-          order: lIdx,
-        })),
-      })),
-    };
-
-    startTransition(async () => {
-      const res = await createCourse(payload);
-      if (res.success) {
-        router.push(`/admin/courses`);
-      } else {
-        setFormErrors(res.errors);
-      }
-    });
   };
 
   const handlePublish = async () => {
