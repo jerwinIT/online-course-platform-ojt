@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useRef, useTransition, useEffect } from "react";
+import { useState, useTransition, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,19 +31,10 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import {
-  ArrowLeft,
-  Upload,
-  Plus,
-  Trash2,
-  Save,
-  X,
-  Loader2,
-} from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Save, X, Loader2 } from "lucide-react";
 import {
   createCourse,
   publishCourse,
-  uploadCourseImage,
   createCategory,
   deleteCategory,
   getCategories,
@@ -519,7 +510,6 @@ export default function CreateCoursePage() {
   const [categoryId, setCategoryId] = useState("");
   const [sections, setSections] = useState<Section[]>([]);
   const [imageUrl, setImageUrl] = useState("");
-  const [uploadingImage, setUploadingImage] = useState(false);
 
   // Load categories
   const [categories, setCategories] = useState<Category[]>([]);
@@ -546,9 +536,6 @@ export default function CreateCoursePage() {
     guidelines: false,
   });
 
-  // Image upload ref
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
   // ---------------------------------------------------------------------------
   // Section CRUD
   // ---------------------------------------------------------------------------
@@ -574,31 +561,8 @@ export default function CreateCoursePage() {
   };
 
   // ---------------------------------------------------------------------------
-  // Image upload
+  // Publish handler
   // ---------------------------------------------------------------------------
-
-  const handleImageSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    setUploadingImage(true);
-    const fd = new FormData();
-    fd.append("image", file);
-
-    try {
-      const result = await uploadCourseImage(fd);
-      if (result.success) {
-        setImageUrl(result.url);
-      } else {
-        alert("Image upload failed: " + result.error);
-      }
-    } catch (err) {
-      alert("Image upload error");
-      console.error(err);
-    } finally {
-      setUploadingImage(false);
-    }
-  };
 
   const handlePublish = async () => {
     setFormErrors({});
@@ -829,36 +793,22 @@ export default function CreateCoursePage() {
 
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-foreground">
-                      Cover Image (optional)
+                      Cover Image URL (optional)
                     </label>
-                    <div className="flex items-center gap-4">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => fileInputRef.current?.click()}
-                        disabled={uploadingImage}
-                      >
-                        {uploadingImage ? (
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        ) : (
-                          <Upload className="w-4 h-4 mr-2" />
-                        )}
-                        {imageUrl ? "Change Image" : "Upload Image"}
-                      </Button>
-                      {imageUrl && (
-                        <span className="text-xs text-muted-foreground">
-                          Image uploaded ✓
-                        </span>
-                      )}
-                    </div>
-                    <input
-                      type="file"
-                      ref={fileInputRef}
-                      className="hidden"
-                      accept="image/png,image/jpeg,image/gif,image/webp"
-                      onChange={handleImageSelect}
+                    <Input
+                      type="url"
+                      placeholder="https://example.com/image.jpg"
+                      value={imageUrl}
+                      onChange={(e) => setImageUrl(e.target.value)}
                     />
+                    {formErrors.image && (
+                      <p className="text-xs text-destructive">
+                        {formErrors.image[0]}
+                      </p>
+                    )}
+                    <p className="text-xs text-muted-foreground">
+                      Enter a direct URL to your course cover image
+                    </p>
                   </div>
                 </CardContent>
               </Card>

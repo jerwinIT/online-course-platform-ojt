@@ -30,7 +30,7 @@ const SectionSchema = z.object({
 const CourseSchema = z.object({
   title: z.string().min(1, "Course title is required"),
   subtitle: z.string().optional(),
-  image: z.string().optional(),
+  image: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   description: z.string().min(1, "Course description is required"),
   duration: z.coerce
     .number()
@@ -69,28 +69,8 @@ export type CategoryActionResult =
   | { success: true; category: { id: string; name: string; slug: string } }
   | { success: false; errors: Record<string, string[]> };
 
-// ---------------------------------------------------------------------------
-// Helper: upload image from FormData
-// Replace this stub with your actual file storage (S3, Cloudinary, etc.)
-// ---------------------------------------------------------------------------
-
-async function handleImageUpload(file: File): Promise<string | null> {
-  if (!file || file.size === 0) return null;
-
-  // TODO: integrate your storage provider here.
-  // Example with a local /public/uploads folder (dev only):
-  //
-  // const bytes = await file.arrayBuffer();
-  // const buffer = Buffer.from(bytes);
-  // const filename = `${Date.now()}-${file.name}`;
-  // await writeFile(`./public/uploads/${filename}`, buffer);
-  // return `/uploads/${filename}`;
-
-  throw new Error(
-    "handleImageUpload: no storage provider configured. " +
-      "Connect an S3 bucket, Cloudinary, or similar and implement this function.",
-  );
-}
+// Note: Image is now handled as a direct URL input in the form
+// No file upload function needed
 
 // ---------------------------------------------------------------------------
 // createCategory – creates a new category
@@ -343,47 +323,6 @@ export async function publishCourse(courseId: string): Promise<ActionResult> {
       success: false,
       errors: { _form: ["Failed to publish course."] },
     };
-  }
-}
-
-// ---------------------------------------------------------------------------
-// uploadCourseImage – handles the file upload separately from the main form
-// so the heavy multipart request is isolated from the JSON form submission
-// ---------------------------------------------------------------------------
-
-export async function uploadCourseImage(
-  formData: FormData,
-): Promise<{ success: true; url: string } | { success: false; error: string }> {
-  const session = await getSession();
-  if (!session?.user?.id) {
-    return { success: false, error: "Unauthorized." };
-  }
-
-  const file = formData.get("image") as File | null;
-  if (!file) {
-    return { success: false, error: "No file provided." };
-  }
-
-  const MAX_SIZE = 10 * 1024 * 1024; // 10 MB
-  if (file.size > MAX_SIZE) {
-    return { success: false, error: "File exceeds 10 MB limit." };
-  }
-
-  const ALLOWED_TYPES = ["image/png", "image/jpeg", "image/gif", "image/webp"];
-  if (!ALLOWED_TYPES.includes(file.type)) {
-    return {
-      success: false,
-      error: "Only PNG, JPG, GIF and WEBP are allowed.",
-    };
-  }
-
-  try {
-    const url = await handleImageUpload(file);
-    if (!url) return { success: false, error: "Upload returned no URL." };
-    return { success: true, url };
-  } catch (error) {
-    console.error("[uploadCourseImage] error:", error);
-    return { success: false, error: "Image upload failed." };
   }
 }
 
