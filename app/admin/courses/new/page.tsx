@@ -1102,20 +1102,6 @@ export default function CreateCoursePage() {
                   Back
                 </Button>
                 <div className="flex gap-2">
-                  {/* Save draft */}
-                  <Button
-                    variant="outline"
-                    onClick={handleSave}
-                    disabled={isPending || !basicComplete || !detailsComplete}
-                  >
-                    {isPending ? (
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    ) : (
-                      <Save className="w-4 h-4 mr-2" />
-                    )}
-                    Save Draft
-                  </Button>
-
                   {/* Publish */}
                   <Button
                     onClick={handlePublish}
