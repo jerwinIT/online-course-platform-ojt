@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/card";
 import type { CourseListItem } from "@/server/actions/course";
 import { BookOpen, Users, ArrowRight, TrendingUp, Clock } from "lucide-react";
+import Footer from "../footer";
 
 interface HomePageProps {
   courses: CourseListItem[];
@@ -31,7 +32,7 @@ export default function HomePage({ courses }: HomePageProps) {
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
-      <section className="relative px-4 py-16 sm:px-6 lg:px-8 overflow-hidden">
+      <section className="relative px-4 py-16 mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 overflow-hidden">
         <div className="mx-auto max-w-6xl">
           <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-8 items-center">
             <div className="space-y-6">
@@ -72,7 +73,7 @@ export default function HomePage({ courses }: HomePageProps) {
 
       {/* Stats Section */}
       <section className="bg-secondary py-12 px-4 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-6xl">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 ">
           <div className="grid grid-cols-1 gap-8 sm:grid-cols-3">
             <div className="text-center">
               <div className="text-3xl font-bold text-primary mb-2">10K+</div>
@@ -92,7 +93,7 @@ export default function HomePage({ courses }: HomePageProps) {
 
       {/* Available Courses Preview */}
       <section className="px-4 py-16 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-6xl">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           <div className="mb-12">
             <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
               Available Courses
@@ -188,7 +189,7 @@ export default function HomePage({ courses }: HomePageProps) {
 
       {/* Features Section */}
       <section className="bg-secondary px-4 py-16 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-6xl">
+        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           <div className="mb-12 text-center">
             <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
               Why Choose LearnHub?
@@ -229,6 +230,7 @@ export default function HomePage({ courses }: HomePageProps) {
           </div>
         </div>
       </section>
+      <Footer />
     </div>
   );
 }
