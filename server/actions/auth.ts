@@ -2,6 +2,12 @@
 
 import { hash } from 'bcryptjs'
 import prisma from '@/lib/prisma'
+import {
+  validateEmail,
+  validateName,
+  validatePassword,
+  validatePasswordMatch,
+} from '@/lib/validators/auth'
 
 const SALT_ROUNDS = 10
 
@@ -14,20 +20,19 @@ export async function signUpWithCredentials(
   _prev: SignUpState | null,
   formData: FormData
 ): Promise<SignUpState> {
-  const name = (formData.get('name') as string)?.trim()
-  const email = (formData.get('email') as string)?.trim().toLowerCase()
-  const password = formData.get('password') as string
-  const confirmPassword = formData.get('confirmPassword') as string
+  const name = (formData.get('name') as string)?.trim() ?? ''
+  const email = (formData.get('email') as string)?.trim().toLowerCase() ?? ''
+  const password = (formData.get('password') as string) ?? ''
+  const confirmPassword = (formData.get('confirmPassword') as string) ?? ''
 
-  if (!name || !email || !password) {
-    return { error: 'Name, email and password are required.' }
-  }
-  if (password.length < 8) {
-    return { error: 'Password must be at least 8 characters.' }
-  }
-  if (password !== confirmPassword) {
-    return { error: 'Passwords do not match.' }
-  }
+  const nameResult = validateName(name)
+  if (!nameResult.ok) return { error: nameResult.error }
+  const emailResult = validateEmail(email)
+  if (!emailResult.ok) return { error: emailResult.error }
+  const passwordResult = validatePassword(password)
+  if (!passwordResult.ok) return { error: passwordResult.error }
+  const matchResult = validatePasswordMatch(password, confirmPassword)
+  if (!matchResult.ok) return { error: matchResult.error }
 
   try {
     const existing = await prisma.user.findUnique({ where: { email } })

@@ -14,6 +14,12 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { BookOpen, Mail, Lock, User, ArrowRight } from "lucide-react";
+import {
+  validateEmail,
+  validateName,
+  validatePassword,
+  validatePasswordMatch,
+} from "@/lib/validators/auth";
 import { signUpWithCredentials } from "@/server/actions/auth";
 
 function SignupForm() {
@@ -26,8 +32,35 @@ function SignupForm() {
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
+    const form = e.currentTarget;
+    const formData = new FormData(form);
+    const name = (formData.get("name") as string) ?? "";
+    const email = (formData.get("email") as string) ?? "";
+    const password = (formData.get("password") as string) ?? "";
+    const confirmPassword = (formData.get("confirmPassword") as string) ?? "";
+
+    const nameResult = validateName(name);
+    if (!nameResult.ok) {
+      setError(nameResult.error);
+      return;
+    }
+    const emailResult = validateEmail(email);
+    if (!emailResult.ok) {
+      setError(emailResult.error);
+      return;
+    }
+    const passwordResult = validatePassword(password);
+    if (!passwordResult.ok) {
+      setError(passwordResult.error);
+      return;
+    }
+    const matchResult = validatePasswordMatch(password, confirmPassword);
+    if (!matchResult.ok) {
+      setError(matchResult.error);
+      return;
+    }
+
     setIsLoading(true);
-    const formData = new FormData(e.currentTarget);
     try {
       const result = await signUpWithCredentials(null, formData);
       if (result.error) {

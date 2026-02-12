@@ -13,6 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { BookOpen, Mail, Lock, ArrowRight } from "lucide-react";
+import { validateEmail, validateLoginPassword } from "@/lib/validators/auth";
 
 const OAUTH_ERROR_MESSAGES: Record<string, string> = {
   Callback:
@@ -49,6 +50,18 @@ export function LoginForm({
   async function handleCredentialsSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+
+    const emailResult = validateEmail(email);
+    if (!emailResult.ok) {
+      setError(emailResult.error);
+      return;
+    }
+    const passwordResult = validateLoginPassword(password);
+    if (!passwordResult.ok) {
+      setError(passwordResult.error);
+      return;
+    }
+
     setIsLoading(true);
     try {
       const res = await signIn("credentials", {
