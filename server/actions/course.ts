@@ -356,68 +356,19 @@ export type CourseListItem = {
 };
 
 export type GetCoursesResult =
-  | {
-      success: true;
-      data: CourseListItem[];
-      totalPages: number;
-      currentPage: number;
-      totalCount: number;
-    }
+  | { success: true; data: CourseListItem[] }
   | { success: false; error: string };
 
-export type GetCoursesParams = {
-  page?: number;
-  limit?: number;
-  search?: string;
-  categorySlug?: string;
-};
-
 // ---------------------------------------------------------------------------
-// getCourses – fetches published courses with pagination and filtering
+// getCourses – fetches all published courses for the listing page
 // ---------------------------------------------------------------------------
 
-export async function getCourses(
-  params: GetCoursesParams = {},
-): Promise<GetCoursesResult> {
-  const {
-    page = 1,
-    limit = 12, // 12 courses per page (fits 2 columns nicely)
-    search = "",
-    categorySlug,
-  } = params;
-
+export async function getCourses(): Promise<GetCoursesResult> {
   try {
-    // Build the where clause
-    const where: Record<string, unknown> = {
-      isPublished: true,
-    };
-
-    // Add search filter
-    if (search) {
-      where.OR = [
-        { title: { contains: search, mode: "insensitive" } },
-        { subtitle: { contains: search, mode: "insensitive" } },
-        { description: { contains: search, mode: "insensitive" } },
-        { category: { name: { contains: search, mode: "insensitive" } } },
-        { createdBy: { name: { contains: search, mode: "insensitive" } } },
-      ];
-    }
-
-    // Add category filter
-    if (categorySlug && categorySlug !== "all") {
-      where.category = { slug: categorySlug };
-    }
-
-    // Get total count for pagination
-    const totalCount = await prisma.course.count({ where });
-
-    // Calculate pagination
-    const totalPages = Math.ceil(totalCount / limit);
-    const skip = (page - 1) * limit;
-
-    // Fetch paginated courses
     const courses = await prisma.course.findMany({
-      where,
+      where: {
+        isPublished: true,
+      },
       select: {
         id: true,
         title: true,
@@ -457,8 +408,6 @@ export async function getCourses(
       orderBy: {
         createdAt: "desc",
       },
-      skip,
-      take: limit,
     });
 
     return {
@@ -468,9 +417,6 @@ export async function getCourses(
         createdAt: course.createdAt.toISOString(),
         totalLessons: sections.reduce((sum, s) => sum + s._count.lessons, 0),
       })),
-      totalPages,
-      currentPage: page,
-      totalCount,
     };
   } catch (error) {
     console.error("[getCourses] DB error:", error);
