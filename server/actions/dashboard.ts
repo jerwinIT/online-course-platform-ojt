@@ -10,7 +10,7 @@ async function getAuthenticatedStudent() {
   const session = await getSession();
 
   if (!session?.user) {
-    redirect("/auth/signup");
+    redirect("/");
   }
 
   if (session.user.role === "ADMIN") {
