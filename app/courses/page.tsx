@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Footer from "@/components/footer";
 import { getCourses } from "@/server/actions/course";
 import CoursesClient from "@/components/contents/course-client";
@@ -46,9 +47,44 @@ export default async function CoursesPage() {
           </p>
         </div>
       </section>
-      <CoursesClient courses={result.data} />
+      <Suspense fallback={<CoursesLoadingSkeleton />}>
+        <CoursesClient courses={result.data} />
+      </Suspense>
 
       <Footer />
     </div>
+  );
+}
+
+function CoursesLoadingSkeleton() {
+  return (
+    <section className="flex-1 py-12">
+      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          <div className="lg:col-span-1 space-y-6">
+            <div className="h-8 w-24 bg-muted rounded animate-pulse" />
+            <div className="h-10 bg-muted rounded animate-pulse" />
+            <div className="h-8 w-24 bg-muted rounded animate-pulse" />
+            <div className="h-10 bg-muted rounded animate-pulse" />
+          </div>
+          <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-6">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div
+                key={i}
+                className="rounded-xl border bg-card overflow-hidden"
+              >
+                <div className="h-40 bg-muted animate-pulse" />
+                <div className="p-6 space-y-3">
+                  <div className="h-5 bg-muted rounded animate-pulse" />
+                  <div className="h-4 w-2/3 bg-muted rounded animate-pulse" />
+                  <div className="h-4 w-1/2 bg-muted rounded animate-pulse" />
+                  <div className="h-10 bg-muted rounded animate-pulse mt-4" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }

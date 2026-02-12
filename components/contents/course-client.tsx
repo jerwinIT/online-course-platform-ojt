@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -31,12 +32,40 @@ interface CoursesClientProps {
 }
 
 export default function CoursesClient({ courses }: CoursesClientProps) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   const [searchQuery, setSearchQuery] = useState("");
-  const [categoryId, setCategoryId] = useState<string>("all");
   const [categories, setCategories] = useState<
     Array<{ id: string; name: string; slug: string }>
   >([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
+
+  // Read category from URL, defaulting to "all"
+  const categorySlug = searchParams.get("category") ?? "all";
+
+  // Derive the selected categoryId from the slug
+  const categoryId =
+    categorySlug === "all"
+      ? "all"
+      : (categories.find((c) => c.slug === categorySlug)?.id ?? "all");
+
+  const updateCategoryParam = useCallback(
+    (newCategoryId: string) => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (newCategoryId === "all") {
+        params.delete("category");
+      } else {
+        const slug = categories.find((c) => c.id === newCategoryId)?.slug;
+        if (slug) {
+          params.set("category", slug);
+        }
+      }
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    },
+    [categories, pathname, router, searchParams],
+  );
 
   // Fetch categories from server action
   useEffect(() => {
@@ -99,7 +128,7 @@ export default function CoursesClient({ courses }: CoursesClientProps) {
               {/* Category */}
               <div className="space-y-2">
                 <h3 className="font-semibold text-foreground">Category</h3>
-                <Select value={categoryId} onValueChange={setCategoryId}>
+                <Select value={categoryId} onValueChange={updateCategoryParam}>
                   <SelectTrigger className="flex-1">
                     <SelectValue placeholder="Select a category" />
                   </SelectTrigger>

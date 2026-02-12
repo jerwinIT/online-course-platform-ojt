@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { signIn } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
@@ -135,12 +136,10 @@ export default function Navbar() {
               </DropdownMenu>
             ) : (
               <>
-                <Link href="/auth/login">
-                  <Button variant="outline">Log In</Button>
-                </Link>
-                <Link href="/auth/signup">
-                  <Button>Sign Up</Button>
-                </Link>
+                {/* <img src="/google.svg" alt="Google" className="w-5 h-5" /> */}
+                <Button onClick={() => signIn("google")}>
+                  Continue with Gsuite
+                </Button>
               </>
             )}
           </div>
@@ -226,22 +225,15 @@ export default function Navbar() {
                 </>
               ) : (
                 <>
-                  <Link
-                    href="/auth/login"
+                  <Button
                     className="w-full"
-                    onClick={() => setIsOpen(false)}
+                    onClick={() => {
+                      setIsOpen(false);
+                      signIn("google");
+                    }}
                   >
-                    <Button variant="outline" className="w-full bg-transparent">
-                      Log In
-                    </Button>
-                  </Link>
-                  <Link
-                    href="/auth/signup"
-                    className="w-full"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    <Button className="w-full">Sign Up</Button>
-                  </Link>
+                    Continue with Gsuite
+                  </Button>
                 </>
               )}
             </div>

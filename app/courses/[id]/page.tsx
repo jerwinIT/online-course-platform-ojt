@@ -1,5 +1,4 @@
 import { Suspense } from "react";
-import { BookOpen } from "lucide-react";
 import CourseDetailContent from "@/components/contents/course-detail";
 import { getCourseDetailData } from "@/server/actions/courseDetail";
 
