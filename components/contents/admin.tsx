@@ -599,26 +599,6 @@ export default function AdminContent() {
 
                                 {/* Edit form goes here */}
                                 <div className="space-y-4">
-                                  <div className="space-y-2">
-                                    <label className="text-sm font-medium">
-                                      Name
-                                    </label>
-                                    <input
-                                      defaultValue={user.name ?? ""}
-                                      className="w-full rounded-md border px-3 py-2 text-sm"
-                                    />
-                                  </div>
-
-                                  <div className="space-y-2">
-                                    <label className="text-sm font-medium">
-                                      Email
-                                    </label>
-                                    <input
-                                      defaultValue={user.email}
-                                      disabled
-                                      className="w-full rounded-md border px-3 py-2 text-sm bg-muted"
-                                    />
-                                  </div>
                                   <Select defaultValue={user.role}>
                                     <label className="text-sm font-medium">
                                       Role
