@@ -12,6 +12,10 @@ export type DeleteUserResult =
   | { success: true }
   | { success: false; error: string };
 
+export type UpdateUserRoleResult =
+  | { success: true }
+  | { success: false; error: string };
+
 // ---------------------------------------------------------------------------
 // deleteUser – removes a user and all their related data
 // ---------------------------------------------------------------------------
@@ -116,6 +120,81 @@ export async function deleteUser(userId: string): Promise<DeleteUserResult> {
     return {
       success: false,
       error: "Something went wrong deleting the user. Please try again.",
+    };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// updateUserRole – updates a user's role (ADMIN or STUDENT)
+// ---------------------------------------------------------------------------
+
+export async function updateUserRole(
+  userId: string,
+  newRole: "ADMIN" | "STUDENT",
+): Promise<UpdateUserRoleResult> {
+  const session = await getSession();
+  if (!session?.user?.id) {
+    return { success: false, error: "Unauthorized." };
+  }
+
+  // Check if the current user is an admin
+  const currentUser = await prisma.user.findUnique({
+    where: { id: session.user.id },
+    select: { role: true },
+  });
+
+  if (currentUser?.role !== "ADMIN") {
+    return {
+      success: false,
+      error: "Access denied. Admin privileges required.",
+    };
+  }
+
+  if (!userId) {
+    return { success: false, error: "User ID is required." };
+  }
+
+  if (!newRole || (newRole !== "ADMIN" && newRole !== "STUDENT")) {
+    return { success: false, error: "Invalid role. Must be ADMIN or STUDENT." };
+  }
+
+  // Prevent admins from changing their own role
+  if (userId === session.user.id) {
+    return {
+      success: false,
+      error: "You cannot change your own role.",
+    };
+  }
+
+  try {
+    // Check if user exists
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+      },
+    });
+
+    if (!user) {
+      return { success: false, error: "User not found." };
+    }
+
+    // Update the user's role
+    await prisma.user.update({
+      where: { id: userId },
+      data: { role: newRole },
+    });
+
+    revalidatePath("/admin?tab=users");
+    return { success: true };
+  } catch (error) {
+    console.error("[updateUserRole] DB error:", error);
+    return {
+      success: false,
+      error: "Something went wrong updating the user role. Please try again.",
     };
   }
 }

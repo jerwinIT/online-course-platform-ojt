@@ -71,6 +71,7 @@ import {
   Filter,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { updateUserRole } from "@/server/actions/user";
 
 import Footer from "@/components/footer";
 import { useSearchParams, useRouter } from "next/navigation";
@@ -110,6 +111,11 @@ export default function AdminContent() {
   const [users, setUsers] = useState<AdminUserItem[]>([]);
   const [userSearchQuery, setUserSearchQuery] = useState("");
   const [deletingCourseId, setDeletingCourseId] = useState<string | null>(null);
+  const [editingUserId, setEditingUserId] = useState<string | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<"ADMIN" | "STUDENT">(
+    "STUDENT",
+  );
   const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
   useState<EnrollmentTrendByCourse | null>(null);
 
@@ -162,6 +168,33 @@ export default function AdminContent() {
       toast.error("Failed to delete user");
     } finally {
       setDeletingUserId(null);
+    }
+  };
+
+  const handleUpdateUserRole = async (
+    userId: string,
+    role: "ADMIN" | "STUDENT",
+  ) => {
+    try {
+      setEditingUserId(userId);
+      const result = await updateUserRole(userId, role);
+
+      if (!result.success) {
+        toast.error(result.error || "Failed to update user role");
+        return;
+      }
+
+      toast.success("User role updated successfully!");
+      setEditDialogOpen(false);
+
+      // Refresh the users list
+      const list = await getAdminUsers();
+      router.push(" admin?tab=users");
+      setUsers(list);
+    } catch (error) {
+      toast.error("Failed to update user role");
+    } finally {
+      setEditingUserId(null);
     }
   };
   useEffect(() => {
@@ -575,9 +608,20 @@ export default function AdminContent() {
                         </TableCell>
                         <TableCell className="px-4 text-right">
                           <div className="flex justify-end gap-2">
-                            <Dialog>
+                            <Dialog
+                              open={editDialogOpen}
+                              onOpenChange={setEditDialogOpen}
+                            >
                               <DialogTrigger asChild>
-                                <Button size="icon" variant="ghost">
+                                <Button
+                                  size="icon"
+                                  variant="ghost"
+                                  onClick={() => {
+                                    setSelectedRole(
+                                      user.role as "ADMIN" | "STUDENT",
+                                    );
+                                  }}
+                                >
                                   <Edit className="w-4 h-4" />
                                 </Button>
                               </DialogTrigger>
@@ -586,34 +630,61 @@ export default function AdminContent() {
                                 <DialogHeader>
                                   <DialogTitle>Edit User</DialogTitle>
                                   <DialogDescription>
-                                    Update user details and role.
+                                    Update user role for{" "}
+                                    {user.name || user.email}.
                                   </DialogDescription>
                                 </DialogHeader>
 
-                                {/* Edit form goes here */}
                                 <div className="space-y-4">
-                                  <Select defaultValue={user.role}>
+                                  <div className="space-y-2">
                                     <label className="text-sm font-medium">
                                       Role
                                     </label>
-                                    <SelectTrigger>
-                                      <SelectValue placeholder="Select role" />
-                                    </SelectTrigger>
-                                    <SelectContent position="popper">
-                                      <SelectGroup>
-                                        <SelectItem value="ADMIN">
-                                          ADMIN
-                                        </SelectItem>
-                                        <SelectItem value="STUDENT">
-                                          STUDENT
-                                        </SelectItem>
-                                      </SelectGroup>
-                                    </SelectContent>
-                                  </Select>
+                                    <Select
+                                      value={selectedRole}
+                                      onValueChange={(value) =>
+                                        setSelectedRole(
+                                          value as "ADMIN" | "STUDENT",
+                                        )
+                                      }
+                                    >
+                                      <SelectTrigger>
+                                        <SelectValue placeholder="Select role" />
+                                      </SelectTrigger>
+                                      <SelectContent position="popper">
+                                        <SelectGroup>
+                                          <SelectItem value="ADMIN">
+                                            ADMIN
+                                          </SelectItem>
+                                          <SelectItem value="STUDENT">
+                                            STUDENT
+                                          </SelectItem>
+                                        </SelectGroup>
+                                      </SelectContent>
+                                    </Select>
+                                  </div>
 
                                   <div className="flex justify-end gap-2 pt-2">
-                                    <Button variant="secondary">Cancel</Button>
-                                    <Button>Save changes</Button>
+                                    <Button
+                                      variant="secondary"
+                                      onClick={() => setEditDialogOpen(false)}
+                                      disabled={editingUserId === user.id}
+                                    >
+                                      Cancel
+                                    </Button>
+                                    <Button
+                                      onClick={() =>
+                                        handleUpdateUserRole(
+                                          user.id,
+                                          selectedRole,
+                                        )
+                                      }
+                                      disabled={editingUserId === user.id}
+                                    >
+                                      {editingUserId === user.id
+                                        ? "Saving..."
+                                        : "Save changes"}
+                                    </Button>
                                   </div>
                                 </div>
                               </DialogContent>
