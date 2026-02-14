@@ -115,6 +115,62 @@ function ProgressBar({ progress }: { progress: number }) {
   );
 }
 
+// ─── Share Button ──────────────────────────────────────────────────────────────
+
+function ShareButton({
+  title,
+  description,
+}: {
+  title: string;
+  description?: string;
+}) {
+  const [shareState, setShareState] = useState<"idle" | "copied" | "error">(
+    "idle",
+  );
+
+  async function handleShare() {
+    const url = window.location.href;
+
+    // Use the native Web Share API when available (mobile / modern browsers)
+    if (navigator.share) {
+      try {
+        await navigator.share({ title, text: description, url });
+      } catch {
+        // User cancelled — treat as a no-op
+      }
+      return;
+    }
+
+    // Fallback: copy the URL to clipboard
+    try {
+      await navigator.clipboard.writeText(url);
+      setShareState("copied");
+      setTimeout(() => setShareState("idle"), 2000);
+    } catch {
+      setShareState("error");
+      setTimeout(() => setShareState("idle"), 2000);
+    }
+  }
+
+  const label =
+    shareState === "copied"
+      ? "Copied!"
+      : shareState === "error"
+        ? "Failed"
+        : "Share";
+
+  return (
+    <Button
+      variant="outline"
+      className="flex-1 gap-2 bg-transparent"
+      onClick={handleShare}
+    >
+      <Share2 className="w-4 h-4" />
+      {label}
+    </Button>
+  );
+}
+
 // ─── Lesson Row ────────────────────────────────────────────────────────────────
 
 function LessonRow({
@@ -254,15 +310,6 @@ export default function CourseDetailContent({
 
               <p className="text-lg text-muted-foreground">{description}</p>
 
-              {instructor.name && (
-                <p className="text-sm text-muted-foreground">
-                  Instructor:{" "}
-                  <span className="font-medium text-foreground">
-                    {instructor.name}
-                  </span>
-                </p>
-              )}
-
               <div className="flex flex-wrap gap-6">
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Users className="w-5 h-5" />
@@ -343,13 +390,7 @@ export default function CourseDetailContent({
                       variant="outline"
                       className="flex-1 gap-2 bg-transparent"
                     />
-                    <Button
-                      variant="outline"
-                      className="flex-1 gap-2 bg-transparent"
-                    >
-                      <Share2 className="w-4 h-4" />
-                      Share
-                    </Button>
+                    <ShareButton title={title} />
                   </div>
                 </CardContent>
               </Card>
