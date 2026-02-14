@@ -6,6 +6,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession, signOut } from "next-auth/react";
 import { Button } from "@/components/ui/button";
+import Image from "next/image";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,6 +30,10 @@ export default function Navbar() {
   const pathname = usePathname();
   const { data: session, status } = useSession();
   const isAuthenticated = status === "authenticated" && session?.user;
+  const isAdmin = (session?.user as { role?: string })?.role === "ADMIN";
+  const dashboardLabel = isAdmin ? "Admin" : "Dashboard";
+  const dashboardHref = isAdmin ? "/admin" : "/dashboard";
+  const isDashboardActive = pathname.startsWith(dashboardHref);
 
   function handleSignOut() {
     signOut({ callbackUrl: "/" });
@@ -51,6 +56,18 @@ export default function Navbar() {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
+            {isAuthenticated && (
+              <Link
+                href={dashboardHref}
+                className={`transition-colors border-b-2 ${
+                  isDashboardActive
+                    ? "text-primary border-primary"
+                    : "text-foreground border-transparent hover:text-primary"
+                }`}
+              >
+                {dashboardLabel}
+              </Link>
+            )}
             <Link
               href="/courses"
               className={`transition-colors border-b-2 ${
@@ -61,28 +78,6 @@ export default function Navbar() {
             >
               Courses
             </Link>
-            {isAuthenticated && (
-              <Link
-                href="/dashboard"
-                className={`transition-colors border-b-2 ${
-                  pathname.startsWith("/dashboard")
-                    ? "text-primary border-primary"
-                    : "text-foreground border-transparent hover:text-primary"
-                }`}
-              >
-                Dashboard
-              </Link>
-            )}
-            <Link
-              href="/about"
-              className={`transition-colors border-b-2 ${
-                pathname === "/about"
-                  ? "text-primary border-primary"
-                  : "text-foreground border-transparent hover:text-primary"
-              }`}
-            >
-              About
-            </Link>
           </div>
 
           {/* Desktop: Profile dropdown or Auth buttons */}
@@ -90,9 +85,17 @@ export default function Navbar() {
             {isAuthenticated ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="rounded-full">
-                    <CircleUser className="w-6 h-6" />
-                    <span className="sr-only">Open user menu</span>
+                <Button variant="ghost" size="icon" className="rounded-full relative overflow-hidden">
+                    {session?.user?.image ? ( // ✅ correct source
+                      <Image
+                        src={session.user.image}
+                        alt={session.user.name ?? "User avatar"}
+                        fill
+                     
+                      />
+                    ) : (
+                      <CircleUser className="w-6 h-6" />
+                    )}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-56">
@@ -109,11 +112,11 @@ export default function Navbar() {
                   <DropdownMenuSeparator />
                   <DropdownMenuItem asChild>
                     <Link
-                      href="/dashboard"
+                      href={dashboardHref}
                       className="flex items-center gap-2 cursor-pointer"
                     >
                       <LayoutDashboard className="w-4 h-4" />
-                      Dashboard
+                      {dashboardLabel}
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
@@ -162,6 +165,19 @@ export default function Navbar() {
         {/* Mobile Navigation */}
         {isOpen && (
           <div className="md:hidden pb-4 space-y-3 flex flex-col text-center">
+            {isAuthenticated && (
+              <Link
+                href={dashboardHref}
+                className={`block px-4 py-2 rounded-lg transition ${
+                  isDashboardActive
+                    ? "bg-primary/10 text-primary font-medium"
+                    : "text-foreground hover:bg-secondary"
+                }`}
+                onClick={() => setIsOpen(false)}
+              >
+                {dashboardLabel}
+              </Link>
+            )}
             <Link
               href="/courses"
               className={`block px-4 py-2 rounded-lg transition ${
@@ -174,30 +190,6 @@ export default function Navbar() {
               Courses
             </Link>
 
-            {isAuthenticated && (
-              <Link
-                href="/dashboard"
-                className={`block px-4 py-2 rounded-lg transition ${
-                  pathname.startsWith("/dashboard")
-                    ? "bg-primary/10 text-primary font-medium"
-                    : "text-foreground hover:bg-secondary"
-                }`}
-                onClick={() => setIsOpen(false)}
-              >
-                Dashboard
-              </Link>
-            )}
-            <Link
-              href="/about"
-              className={`block px-4 py-2 rounded-lg transition ${
-                pathname === "/about"
-                  ? "bg-primary/10 text-primary font-medium"
-                  : "text-foreground hover:bg-secondary"
-              }`}
-              onClick={() => setIsOpen(false)}
-            >
-              About
-            </Link>
             <div className="flex flex-col gap-2 pt-2">
               {isAuthenticated ? (
                 <>
@@ -207,10 +199,10 @@ export default function Navbar() {
                     </p>
                     <p className="text-xs truncate">{session?.user?.email}</p>
                   </div>
-                  <Link href="/dashboard" onClick={() => setIsOpen(false)}>
+                  <Link href={dashboardHref} onClick={() => setIsOpen(false)}>
                     <Button variant="outline" className="w-full bg-transparent">
                       <LayoutDashboard className="w-4 h-4" />
-                      Dashboard
+                      {dashboardLabel}
                     </Button>
                   </Link>
                   <Link href="/saved" onClick={() => setIsOpen(false)}>

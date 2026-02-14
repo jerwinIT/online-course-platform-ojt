@@ -72,7 +72,6 @@ import {
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { updateUserRole } from "@/server/actions/user";
-
 import Footer from "@/components/footer";
 import { useSearchParams, useRouter } from "next/navigation";
 import { toast } from "sonner";

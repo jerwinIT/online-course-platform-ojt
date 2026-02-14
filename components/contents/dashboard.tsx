@@ -46,26 +46,11 @@ export default function DashboardContent({ data }: DashboardContentProps) {
         <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <div className="relative w-14 h-14 rounded-full overflow-hidden bg-muted flex-shrink-0 ring-2 ring-border">
-                {user.image ? (
-                  <Image
-                    src={user.image}
-                    alt=""
-                    fill
-                    className="object-cover"
-                    sizes="56px"
-                  />
-                ) : (
-                  <div className="w-full h-full flex items-center justify-center">
-                    <User className="w-7 h-7 text-muted-foreground" />
-                  </div>
-                )}
-              </div>
               <div>
-                <h1 className="text-3xl sm:text-4xl font-bold text-foreground">
-                  Welcome back, {displayName}
+                <h1 className="text-4xl sm:text-5xl font-bold text-foreground mb-4">
+                  Welcome, {displayName}
                 </h1>
-                <p className="text-muted-foreground mt-2">
+                <p className="text-lg text-muted-foreground">
                   Here&apos;s your learning overview
                 </p>
               </div>
