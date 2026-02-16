@@ -35,32 +35,28 @@ interface DashboardContentProps {
 }
 
 export default function DashboardContent({ data }: DashboardContentProps) {
-  const { stats, enrolledCourses, certificates, user } = data;
-  const displayName = user.name ?? user.email ?? "there";
+  const { stats, enrolledCourses, certificates,} = data; //removed user.
+  // const displayName = user.name ?? user.email ?? "there";
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Dashboard Header */}
-      <section className="bg-secondary border-b border-border py-12">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div>
-                <h1 className="text-4xl sm:text-5xl font-bold text-foreground mb-4">
-                  Welcome, {displayName}
-                </h1>
-                <p className="text-lg text-muted-foreground">
-                  Here&apos;s your learning overview
-                </p>
-              </div>
+      <section className="bg-secondary border-b border-border py-8 sm:py-12 lg:py-16 px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-7xl">
+            <div className="max-w-3xl space-y-4 lg:space-y-6">
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-gray-900 leading-[1.1]">
+                Student Dashboard
+              </h1>
+              <p className="text-base sm:text-lg lg:text-xl leading-relaxed text-gray-700">
+                Here&apos;s your learning overview
+              </p>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
       {/* Main Content */}
-      <section className="flex-1 py-12">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 space-y-8">
+      <section className="flex-1 py-12 min-h-[calc(100vh-16rem)] px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl space-y-8">
           {/* Stats Cards */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <Card>

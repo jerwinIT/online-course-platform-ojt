@@ -285,11 +285,11 @@ export default function CourseDetailContent({
       {/* ------------------------------------------------------------------ */}
       {/* Hero                                                                */}
       {/* ------------------------------------------------------------------ */}
-      <section className="bg-gradient-to-br from-primary/5 to-accent/5 border-b border-border px-4 py-12 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+      <section className="bg-gradient-to-br from-primary/5 to-accent/5 border-b border-border px-4 py-8 sm:py-12 lg:py-16 sm:px-6 lg:px-8 min-h-[100vh] flex items-center">
+        <div className="mx-auto max-w-7xl w-full">
           <Link
             href="/courses"
-            className="text-primary hover:underline text-sm mb-4 inline-block"
+            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors mb-6 lg:mb-8"
           >
             ← Back to Courses
           </Link>
@@ -298,21 +298,21 @@ export default function CourseDetailContent({
             {/* Left: course meta */}
             <div className="lg:col-span-2 space-y-6">
               <div className="space-y-3">
-                <Badge className="w-fit">{category.name}</Badge>
-                <h1 className="text-4xl lg:text-5xl font-bold text-foreground text-balance">
+                <Badge className="w-fit text-sm">{category.name}</Badge>
+                <h1 className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-extrabold tracking-tight text-gray-900 leading-[1.1]">
                   {title}
                 </h1>
                 {subtitle && (
-                  <p className="text-xl text-muted-foreground">{subtitle}</p>
+                  <p className="text-lg sm:text-xl lg:text-2xl leading-relaxed max-w-2xl text-gray-700">{subtitle}</p>
                 )}
               </div>
 
-              <p className="text-lg text-muted-foreground">{description}</p>
+              <p className="text-base sm:text-lg text-muted-foreground leading-relaxed">{description}</p>
 
               <div className="flex flex-wrap gap-6">
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Users className="w-5 h-5" />
-                  <span>
+                  <span className="text-sm sm:text-base">
                     {totalEnrollments > 0
                       ? totalEnrollments >= 1000
                         ? `${(totalEnrollments / 1000).toFixed(1)}K students`
@@ -322,20 +322,20 @@ export default function CourseDetailContent({
                 </div>
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Clock className="w-5 h-5" />
-                  <span>{displayDuration}</span>
+                  <span className="text-sm sm:text-base">{displayDuration}</span>
                 </div>
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <BookOpen className="w-5 h-5" />
-                  <span>{totalLessons} lessons</span>
+                  <span className="text-sm sm:text-base">{totalLessons} lessons</span>
                 </div>
               </div>
             </div>
 
             {/* Right: sticky enroll card */}
             <div className="lg:col-span-1">
-              <Card className="sticky top-20">
+              <Card className="sticky top-24 lg:top-28">
                 {image ? (
-                  <div className="relative h-40 w-full overflow-hidden rounded-t-lg">
+                  <div className="relative h-48 w-full overflow-hidden rounded-t-lg">
                     <Image
                       src={image}
                       alt={title}
@@ -344,7 +344,7 @@ export default function CourseDetailContent({
                     />
                   </div>
                 ) : (
-                  <div className="bg-gradient-to-br from-primary/10 to-accent/10 h-40 flex items-center justify-center rounded-t-lg">
+                  <div className="bg-gradient-to-br from-primary/10 to-accent/10 h-48 flex items-center justify-center rounded-t-lg">
                     <BookOpen className="w-12 h-12 text-primary opacity-40" />
                   </div>
                 )}
@@ -401,56 +401,56 @@ export default function CourseDetailContent({
       {/* ------------------------------------------------------------------ */}
       {/* Body                                                                */}
       {/* ------------------------------------------------------------------ */}
-      <section className="flex-1 px-4 py-12 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 space-y-12">
+      <section className="flex-1 py-16 sm:py-20 lg:py-24 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl space-y-12 lg:space-y-16">
           {/* About */}
           <div>
-            <h2 className="text-2xl font-bold text-foreground mb-4">
+            <h2 className="text-2xl lg:text-3xl font-bold text-foreground mb-4 lg:mb-6">
               About this course
             </h2>
-            <p className="text-muted-foreground leading-relaxed whitespace-pre-line">
+            <p className="text-base lg:text-lg text-muted-foreground leading-relaxed whitespace-pre-line">
               {description}
             </p>
           </div>
 
           {/* Quick Stats */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            <div className="rounded-lg border border-border p-4 text-center space-y-1">
-              <Users className="w-6 h-6 text-primary mx-auto" />
-              <p className="font-bold text-lg text-foreground">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 lg:gap-6">
+            <div className="rounded-lg border border-border p-4 lg:p-6 text-center space-y-1 lg:space-y-2">
+              <Users className="w-6 h-6 lg:w-8 lg:h-8 text-primary mx-auto" />
+              <p className="font-bold text-lg lg:text-2xl text-foreground">
                 {totalEnrollments.toLocaleString()}
               </p>
-              <p className="text-xs text-muted-foreground">Students</p>
+              <p className="text-xs lg:text-sm text-muted-foreground">Students</p>
             </div>
-            <div className="rounded-lg border border-border p-4 text-center space-y-1">
-              <BookOpen className="w-6 h-6 text-primary mx-auto" />
-              <p className="font-bold text-lg text-foreground">
+            <div className="rounded-lg border border-border p-4 lg:p-6 text-center space-y-1 lg:space-y-2">
+              <BookOpen className="w-6 h-6 lg:w-8 lg:h-8 text-primary mx-auto" />
+              <p className="font-bold text-lg lg:text-2xl text-foreground">
                 {totalLessons}
               </p>
-              <p className="text-xs text-muted-foreground">Lessons</p>
+              <p className="text-xs lg:text-sm text-muted-foreground">Lessons</p>
             </div>
-            <div className="rounded-lg border border-border p-4 text-center space-y-1">
-              <Clock className="w-6 h-6 text-primary mx-auto" />
-              <p className="font-bold text-lg text-foreground">
+            <div className="rounded-lg border border-border p-4 lg:p-6 text-center space-y-1 lg:space-y-2 col-span-2 sm:col-span-1">
+              <Clock className="w-6 h-6 lg:w-8 lg:h-8 text-primary mx-auto" />
+              <p className="font-bold text-lg lg:text-2xl text-foreground">
                 {displayDuration}
               </p>
-              <p className="text-xs text-muted-foreground">Duration</p>
+              <p className="text-xs lg:text-sm text-muted-foreground">Duration</p>
             </div>
           </div>
 
           {/* Curriculum */}
           <div>
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-foreground">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 lg:mb-8 gap-3">
+              <h2 className="text-2xl lg:text-3xl font-bold text-foreground">
                 Course Curriculum
               </h2>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm lg:text-base text-muted-foreground">
                 {sections.length} sections • {totalLessons} lessons •{" "}
                 {displayDuration} total
               </p>
             </div>
 
-            <div className="space-y-3">
+            <div className="space-y-3 lg:space-y-4">
               {sections.map((section, i) => {
                 const sectionMinutes = section.lessons.reduce(
                   (t, l) => t + (l.duration ?? 0),
@@ -465,13 +465,13 @@ export default function CourseDetailContent({
                     <CardHeader className="pb-3 bg-muted/30">
                       <div className="flex items-start justify-between">
                         <div>
-                          <CardTitle className="text-base">
+                          <CardTitle className="text-base lg:text-lg">
                             <span className="text-muted-foreground mr-2 text-sm">
                               Section {i + 1}
                             </span>
                             {section.title}
                           </CardTitle>
-                          <CardDescription>
+                          <CardDescription className="text-sm">
                             {section.lessons.length} lesson
                             {section.lessons.length !== 1 ? "s" : ""}
                             {sectionMinutes > 0 &&

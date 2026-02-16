@@ -40,26 +40,26 @@ export default function Navbar() {
   }
 
   return (
-    <nav className="border-b border-border bg-background sticky top-0 z-50">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
+    <nav className="border-b border-border bg-background sticky top-0 z-50 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl">
+        <div className="flex items-center justify-between h-16 lg:h-20">
           {/* Logo */}
           <Link
             href="/"
-            className="flex items-center gap-2 font-bold text-xl text-foreground"
+            className="flex items-center gap-2 font-bold text-xl lg:text-2xl text-foreground"
           >
-            <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-              <BookOpen className="w-5 h-5 text-primary-foreground" />
+            <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-lg bg-primary flex items-center justify-center">
+              <BookOpen className="w-5 h-5 lg:w-6 lg:h-6 text-primary-foreground" />
             </div>
             LearnHub
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-8">
+          <div className="hidden md:flex items-center gap-8 lg:gap-10">
             {isAuthenticated && (
               <Link
                 href={dashboardHref}
-                className={`transition-colors border-b-2 ${
+                className={`transition-colors border-b-2 text-base lg:text-lg font-medium ${
                   isDashboardActive
                     ? "text-primary border-primary"
                     : "text-foreground border-transparent hover:text-primary"
@@ -70,7 +70,7 @@ export default function Navbar() {
             )}
             <Link
               href="/courses"
-              className={`transition-colors border-b-2 ${
+              className={`transition-colors border-b-2 text-base lg:text-lg font-medium ${
                 pathname.startsWith("/courses")
                   ? "text-primary border-primary"
                   : "text-foreground border-transparent hover:text-primary"
@@ -85,7 +85,7 @@ export default function Navbar() {
             {isAuthenticated ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-full relative overflow-hidden">
+                <Button variant="ghost" size="icon" className="rounded-full relative overflow-hidden w-10 h-10 lg:w-12 lg:h-12">
                     {session?.user?.image ? ( // ✅ correct source
                       <Image
                         src={session.user.image}
@@ -94,17 +94,17 @@ export default function Navbar() {
                      
                       />
                     ) : (
-                      <CircleUser className="w-6 h-6" />
+                      <CircleUser className="w-6 h-6 lg:w-7 lg:h-7" />
                     )}
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuContent align="end" className="w-56 lg:w-64">
                   <DropdownMenuLabel>
                     <span className="font-normal">
-                      <p className="text-sm font-medium">
+                      <p className="text-sm lg:text-base font-medium">
                         {session?.user?.name ?? "User"}
                       </p>
-                      <p className="text-xs text-muted-foreground truncate">
+                      <p className="text-xs lg:text-sm text-muted-foreground truncate">
                         {session?.user?.email}
                       </p>
                     </span>
@@ -113,18 +113,18 @@ export default function Navbar() {
                   <DropdownMenuItem asChild>
                     <Link
                       href={dashboardHref}
-                      className="flex items-center gap-2 cursor-pointer"
+                      className="flex items-center gap-2 cursor-pointer text-sm lg:text-base"
                     >
-                      <LayoutDashboard className="w-4 h-4" />
+                      <LayoutDashboard className="w-4 h-4 lg:w-5 lg:h-5" />
                       {dashboardLabel}
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
                     <Link
                       href="/saved"
-                      className="flex items-center gap-2 cursor-pointer"
+                      className="flex items-center gap-2 cursor-pointer text-sm lg:text-base"
                     >
-                      <Heart className="w-4 h-4" />
+                      <Heart className="w-4 h-4 lg:w-5 lg:h-5" />
                       Saved
                     </Link>
                   </DropdownMenuItem>
@@ -132,9 +132,9 @@ export default function Navbar() {
                   <DropdownMenuItem
                     variant="destructive"
                     onClick={handleSignOut}
-                    className="cursor-pointer"
+                    className="cursor-pointer text-sm lg:text-base"
                   >
-                    <LogOut className="w-4 h-4" />
+                    <LogOut className="w-4 h-4 lg:w-5 lg:h-5" />
                     Sign out
                   </DropdownMenuItem>
                 </DropdownMenuContent>
@@ -146,6 +146,7 @@ export default function Navbar() {
                   onClick={() =>
                     signIn("google", { callbackUrl: "/dashboard" })
                   }
+                  className="text-sm lg:text-base px-4 lg:px-6 py-2 lg:py-2.5"
                 >
                   Continue with Gsuite
                 </Button>

@@ -214,6 +214,7 @@ export default function AdminContent() {
       const list = await getAdminUsers();
       router.push(" admin?tab=users");
       setUsers(list);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       toast.error("Failed to update user role");
     } finally {
@@ -252,24 +253,22 @@ export default function AdminContent() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       {/* Admin Header */}
-      <section className="bg-secondary border-b border-border py-12">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-              <h1 className="text-3xl sm:text-4xl font-bold text-foreground">
+      <section className="bg-secondary border-b border-border py-8 sm:py-12 lg:py-16 px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-7xl">
+            <div className="max-w-3xl space-y-4 lg:space-y-6">
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-gray-900 leading-[1.1]">
                 Admin Dashboard
               </h1>
-              <p className="text-muted-foreground mt-2">
-                Manage courses, users, and platform settings
+              <p className="text-base sm:text-lg lg:text-xl leading-relaxed text-gray-700">
+                Manage courses and users
               </p>
             </div>
           </div>
-        </div>
       </section>
 
       {/* Main Content */}
-      <section className="flex-1 py-12">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 space-y-8">
+      <section className="flex-1 py-12 min-h-[calc(100vh-16rem)] px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl space-y-8">
           {/* Stats Cards */}
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             <Card>

@@ -31,7 +31,7 @@ export default function HomePage({ courses, categories }: HomePageProps) {
   return (
     <div className="min-h-screen bg-secondary">
       {/* ── Hero ── */}
-      <section className="relative px-4 pt-16 pb-20 mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 overflow-hidden">
+      <section className="relative pb-28 sm:pt-24 sm:pb-32 lg:pt-32 lg:pb-40 overflow-hidden px-4 py-20 sm:px-6 lg:px-8">
         {/* Subtle grid background */}
         <div
           className="pointer-events-none absolute inset-0 opacity-[0.04]"
@@ -44,33 +44,34 @@ export default function HomePage({ courses, categories }: HomePageProps) {
         {/* Warm accent blob */}
         <div className="pointer-events-none absolute -top-32 -right-32 w-[500px] h-[500px] rounded-full bg-secondary" />
 
-        <div className="relative mx-auto max-w-6xl">
-          <div className="max-w-2xl space-y-6">
-            <Badge>Your School&apos;s Learning Hub</Badge>
+        <div className="relative mx-auto max-w-7xl">
+          <div className="max-w-3xl space-y-8 lg:space-y-10">
+            <Badge className="text-sm">Your School&apos;s Learning Hub</Badge>
 
-            <h1 className="text-5xl sm:text-6xl font-extrabold tracking-tight text-gray-900 leading-[1.1]">
+            <h1 className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-extrabold tracking-tight text-gray-900 leading-[1.1]">
               Explore. <span className="relative z-10">Learn.</span>
+              <br />
               Grow.
             </h1>
 
-            <p className="text-lg leading-relaxed max-w-xl">
+            <p className="text-lg sm:text-xl lg:text-2xl leading-relaxed max-w-2xl text-gray-700">
               A private space built exclusively for our students — discover
               supplementary lessons, tutorials, and resources across
               programming, business, design, and more.
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-3 pt-2">
+            <div className="flex flex-col sm:flex-row gap-4 pt-4">
               <Link href="/courses">
-                <Button size="lg">
+                <Button size="lg" className="text-base px-8 py-6">
                   Browse All Courses
-                  <ArrowRight className="w-4 h-4" />
+                  <ArrowRight className="w-5 h-5" />
                 </Button>
               </Link>
             </div>
           </div>
 
           {/* Floating stat cards */}
-          <div className="mt-14 flex flex-wrap gap-4">
+          <div className="mt-16 lg:mt-20 flex flex-wrap gap-4 lg:gap-6">
             {[
               { value: "100%", label: "Free for students" },
               { value: "Self-paced", label: "Learn on your schedule" },
@@ -78,13 +79,13 @@ export default function HomePage({ courses, categories }: HomePageProps) {
             ].map((stat) => (
               <div
                 key={stat.label}
-                className="flex items-center gap-3 rounded-2xl border border-gray-200 bg-white px-5 py-3 shadow-sm"
+                className="flex items-center gap-3 rounded-2xl border border-gray-200 bg-white px-6 py-4 lg:px-8 lg:py-5 shadow-sm hover:shadow-md transition-shadow"
               >
                 <div>
-                  <p className="text-base font-bold text-gray-900">
+                  <p className="text-lg lg:text-xl font-bold text-gray-900">
                     {stat.value}
                   </p>
-                  <p className="text-xs text-gray-400">{stat.label}</p>
+                  <p className="text-sm lg:text-base text-gray-500">{stat.label}</p>
                 </div>
               </div>
             ))}
@@ -93,35 +94,35 @@ export default function HomePage({ courses, categories }: HomePageProps) {
       </section>
 
       {/* ── Category Cards ── */}
-      <section className="border-y border-gray-200 bg-white px-4 py-16 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-          <div className="flex items-end justify-between mb-8">
+      <section className="border-y border-gray-200 bg-white px-4 py-20 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="flex items-end justify-between mb-10">
             <div>
-              <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-4">
                 Browse by Category
               </h2>
-              <p className="text-muted-foreground text-lg">
+              <p className="text-muted-foreground text-lg lg:text-xl">
                 Explore topics curated by your educators
               </p>
             </div>
             {categories.length > 6 && (
               <Link
                 href="/courses"
-                className="text-sm font-medium text-primary hover:underline whitespace-nowrap"
+                className="text-sm lg:text-base font-medium text-primary hover:underline whitespace-nowrap"
               >
                 View all →
               </Link>
             )}
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 lg:gap-6">
             {categories.slice(0, 6).map(({ name, slug }) => (
               <Link
                 key={slug}
                 href={`/courses?category=${slug}`}
                 className="h-full"
               >
-                <div className="group flex h-full items-center justify-center rounded-lg border border-gray-200 bg-primary/5 px-4 py-6 text-center hover:border-primary/40 hover:bg-primary transition-all duration-200">
-                  <span className="text-sm sm:text-base font-semibold text-primary group-hover:text-white transition-colors">
+                <div className="group flex h-full items-center justify-center rounded-lg border border-gray-200 bg-primary/5 px-4 py-8 lg:py-10 text-center hover:border-primary/40 hover:bg-primary transition-all duration-200">
+                  <span className="text-sm sm:text-base lg:text-lg font-semibold text-primary group-hover:text-white transition-colors">
                     {name}
                   </span>
                 </div>
@@ -132,13 +133,13 @@ export default function HomePage({ courses, categories }: HomePageProps) {
       </section>
 
       {/* Recently Courses Preview */}
-      <section className="px-4 py-16 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+      <section className="px-4 py-20 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
           <div className="mb-12">
-            <h2 className="text-3xl sm:text-4xl font-bold text-foreground mb-4">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-4">
               Recently
             </h2>
-            <p className="text-muted-foreground text-lg">
+            <p className="text-muted-foreground text-lg lg:text-xl">
               Start learning from our available courses
             </p>
           </div>
@@ -147,14 +148,14 @@ export default function HomePage({ courses, categories }: HomePageProps) {
             {/* Courses Grid */}
             <div className="lg:col-span-3">
               {previewCourses.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {previewCourses.map((course) => (
                     <Card
                       key={course.id}
                       className="overflow-hidden hover:shadow-lg transition-shadow duration-300 flex flex-col"
                     >
                       {/* Course Image */}
-                      <div className="bg-gradient-to-br from-primary/10 to-accent/10 h-40 flex items-center justify-center relative overflow-hidden">
+                      <div className="bg-gradient-to-br from-primary/10 to-accent/10 h-48 flex items-center justify-center relative overflow-hidden">
                         {course.image ? (
                           <Image
                             src={course.image}
@@ -228,19 +229,19 @@ export default function HomePage({ courses, categories }: HomePageProps) {
       </section>
 
       {/* ── Why LearnHub ── */}
-      <section className="border-y border-gray-200 bg-white px-4 py-16 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-          <div className="mb-12 max-w-xl">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-foreground">
+      <section className="border-y border-gray-200 bg-white px-4 py-20 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-14 max-w-2xl">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 text-foreground">
               Made for Students
             </h2>
-            <p className="text-muted-foreground text-lg">
+            <p className="text-muted-foreground text-lg lg:text-xl">
               LearnHub is a private platform — only students enrolled in school
               can access these materials.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 gap-8 sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-3">
             {[
               {
                 icon: BookOpen,
@@ -261,14 +262,14 @@ export default function HomePage({ courses, categories }: HomePageProps) {
               const Icon = feature.icon;
               return (
                 <div key={i} className="flex gap-4">
-                  <div className="mt-1 flex-shrink-0 flex items-center justify-center w-10 h-10 rounded-xl bg-white/10">
-                    <Icon className="w-5 h-5 text-primary" />
+                  <div className="mt-1 flex-shrink-0 flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10">
+                    <Icon className="w-6 h-6 text-primary" />
                   </div>
                   <div>
-                    <h3 className="text-base font-semibold mb-1">
+                    <h3 className="text-lg lg:text-xl font-semibold mb-2">
                       {feature.title}
                     </h3>
-                    <p className="text-gray-400 text-sm leading-relaxed">
+                    <p className="text-muted-foreground text-base leading-relaxed">
                       {feature.desc}
                     </p>
                   </div>
@@ -280,13 +281,13 @@ export default function HomePage({ courses, categories }: HomePageProps) {
       </section>
 
       {/* ── CTA Banner ── */}
-      <section className="border-y border-gray-200 px-4 py-16 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-6">
-          <div>
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4 text-foreground">
+      <section className="border-y border-gray-200 px-4 py-20 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl flex flex-col sm:flex-row items-center justify-between gap-8 lg:gap-12">
+          <div className="flex-1">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 text-foreground">
               Ready to start learning?
             </h2>
-            <p className="text-muted-foreground text-lg">
+            <p className="text-muted-foreground text-lg lg:text-xl">
               Explore all available courses and start expanding your skills
               today.
             </p>
@@ -294,9 +295,9 @@ export default function HomePage({ courses, categories }: HomePageProps) {
           <Link href="/courses">
             <Button
               size="lg"
-              className="gap-2 bg-gray-900 hover:bg-gray-700 text-white rounded-xl px-8 shadow-md whitespace-nowrap"
+              className="gap-2 bg-gray-900 hover:bg-gray-700 text-white rounded-xl px-10 py-7 text-base lg:text-lg shadow-md whitespace-nowrap"
             >
-              Go to Courses <ArrowRight className="w-4 h-4" />
+              Go to Courses <ArrowRight className="w-5 h-5" />
             </Button>
           </Link>
         </div>

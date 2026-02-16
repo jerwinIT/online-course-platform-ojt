@@ -105,15 +105,15 @@ export default function CoursesClient({ courses }: CoursesClientProps) {
   });
 
   return (
-    <section className="flex-1 py-12">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+    <section className="h-full py-16 sm:py-20 lg:py-24 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl h-full">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 h-full">
           {/* Sidebar */}
           <div className="lg:col-span-1">
-            <div className="space-y-6 sticky top-20">
+            <div className="space-y-6 sticky top-24">
               {/* Search */}
               <div className="space-y-2">
-                <h3 className="font-semibold text-foreground">Search</h3>
+                <h3 className="font-semibold text-foreground text-base lg:text-lg">Search</h3>
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
@@ -127,7 +127,7 @@ export default function CoursesClient({ courses }: CoursesClientProps) {
 
               {/* Category */}
               <div className="space-y-2">
-                <h3 className="font-semibold text-foreground">Category</h3>
+                <h3 className="font-semibold text-foreground text-base lg:text-lg">Category</h3>
                 <Select value={categoryId} onValueChange={updateCategoryParam}>
                   <SelectTrigger className="flex-1">
                     <SelectValue placeholder="Select a category" />
@@ -160,14 +160,14 @@ export default function CoursesClient({ courses }: CoursesClientProps) {
           {/* Courses Grid */}
           <div className="lg:col-span-3">
             {filteredCourses.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {filteredCourses.map((course) => (
                   <Card
                     key={course.id}
                     className="overflow-hidden hover:shadow-lg transition-shadow duration-300 flex flex-col"
                   >
                     {/* Course Image */}
-                    <div className="bg-gradient-to-br from-primary/10 to-accent/10 h-40 flex items-center justify-center relative overflow-hidden">
+                    <div className="bg-gradient-to-br from-primary/10 to-accent/10 h-48 flex items-center justify-center relative overflow-hidden">
                       {course.image ? (
                         <Image
                           src={course.image}

@@ -37,19 +37,23 @@ export default async function CoursesPage() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <section className="bg-secondary border-b border-border py-12">
-        <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-          <h1 className="text-4xl sm:text-5xl font-bold text-foreground mb-4">
-            Explore Courses
-          </h1>
-          <p className="text-lg text-muted-foreground">
-            Find the perfect course to learn new skills and advance your career.
-          </p>
+      <section className="bg-secondary border-b border-border py-8 sm:py-12 lg:py-16 px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="max-w-3xl space-y-4 lg:space-y-6">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-gray-900 leading-[1.1]">
+              Explore Courses
+            </h1>
+            <p className="text-base sm:text-lg lg:text-xl leading-relaxed text-gray-700">
+              Find the perfect course to learn new skills and advance your career.
+            </p>
+          </div>
         </div>
       </section>
-      <Suspense fallback={<CoursesLoadingSkeleton />}>
-        <CoursesClient courses={result.data} />
-      </Suspense>
+      <div className="flex-1 min-h-[calc(100vh-16rem)]">
+        <Suspense fallback={<CoursesLoadingSkeleton />}>
+          <CoursesClient courses={result.data} />
+        </Suspense>
+      </div>
 
       <Footer />
     </div>
