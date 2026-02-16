@@ -12,7 +12,6 @@ import {
   CheckCircle,
   AlertCircle,
   FileText,
-  User,
 } from "lucide-react";
 import Footer from "@/components/footer";
 import type { DashboardData } from "@/server/actions/dashboard";

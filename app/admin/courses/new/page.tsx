@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Lesson, Category, Section } from "@/types/course";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import {
   Card,
   CardContent,
@@ -60,6 +61,7 @@ function LessonRow({
   onRemove: () => void;
 }) {
   const [expanded, setExpanded] = useState(false);
+  const [contentType, setContentType] = useState<"video" | "document">("video");
 
   return (
     <div className="border border-border rounded bg-background text-sm">
@@ -100,13 +102,45 @@ function LessonRow({
       </div>
 
       {expanded && (
-        <div className="px-3 pb-3 space-y-2 border-t border-border pt-2">
+        <div className="px-3 pb-3 space-y-3 border-t border-border pt-3">
+          {/* Content Type Selection */}
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Content Type</Label>
+            <RadioGroup
+              value={contentType}
+              onValueChange={(value) => setContentType(value as "video" | "document")}
+              className="flex gap-4"
+            >
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="video" id={`video-${lesson._id}`} />
+                <Label 
+                  htmlFor={`video-${lesson._id}`} 
+                  className="text-sm font-normal cursor-pointer"
+                >
+                  Video URL
+                </Label>
+              </div>
+              <div className="flex items-center space-x-2">
+                <RadioGroupItem value="document" id={`document-${lesson._id}`} />
+                <Label 
+                  htmlFor={`document-${lesson._id}`} 
+                  className="text-sm font-normal cursor-pointer"
+                >
+                  Document URL
+                </Label>
+              </div>
+            </RadioGroup>
+          </div>
+
+          {/* URL Input */}
           <Input
             className="text-sm"
-            placeholder="Video URL (optional)"
+            placeholder={contentType === "video" ? "Video URL (e.g., YouTube, Vimeo)" : "Document URL (e.g., PDF, Google Docs)"}
             value={lesson.videoUrl}
             onChange={(e) => onUpdate({ ...lesson, videoUrl: e.target.value })}
           />
+
+          {/* Lesson Content */}
           <textarea
             className="w-full px-3 py-2 border border-border rounded-md bg-background text-foreground text-sm min-h-20 resize-none"
             placeholder="Lesson content / notes"

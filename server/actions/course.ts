@@ -671,6 +671,7 @@ export type DeleteCourseResult =
 
 export async function deleteCourse(
   courseId: string,
+  force: boolean = false,
 ): Promise<DeleteCourseResult> {
   const session = await getSession();
   if (!session?.user?.id) {
@@ -703,8 +704,8 @@ export async function deleteCourse(
       return { success: false, error: "Access denied." };
     }
 
-    // Optional: prevent deletion if there are active enrollments
-    if (course._count.enrollments > 0) {
+    // Warn about enrollments but allow deletion if force is true
+    if (course._count.enrollments > 0 && !force) {
       return {
         success: false,
         error: `Cannot delete: ${course._count.enrollments} student${course._count.enrollments === 1 ? " is" : "s are"} enrolled in this course.`,

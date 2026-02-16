@@ -27,7 +27,15 @@ import type {
 
 // ─── Video Player Mock ─────────────────────────────────────────────────────────
 
-function VideoPlayer({ title, duration }: { title: string; duration: number }) {
+function VideoPlayer({ 
+  title, 
+  duration, 
+  videoUrl 
+}: { 
+  title: string; 
+  duration: number;
+  videoUrl: string | null;
+}) {
   const [playing, setPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
 
@@ -37,6 +45,68 @@ function VideoPlayer({ title, duration }: { title: string; duration: number }) {
     setProgress(pct);
   }
 
+  // Extract video ID and type from URL
+  const getVideoEmbedUrl = (url: string | null) => {
+    if (!url) return null;
+
+    // YouTube
+    const youtubeRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+    const youtubeMatch = url.match(youtubeRegex);
+    if (youtubeMatch) {
+      return `https://www.youtube.com/embed/${youtubeMatch[1]}?autoplay=0&rel=0`;
+    }
+
+    // Vimeo
+    const vimeoRegex = /vimeo\.com\/(?:video\/)?(\d+)/;
+    const vimeoMatch = url.match(vimeoRegex);
+    if (vimeoMatch) {
+      return `https://player.vimeo.com/video/${vimeoMatch[1]}`;
+    }
+
+    // Direct video URL (mp4, webm, etc.)
+    if (url.match(/\.(mp4|webm|ogg)$/i)) {
+      return url;
+    }
+
+    // Default: treat as direct embed URL
+    return url;
+  };
+
+  const embedUrl = getVideoEmbedUrl(videoUrl);
+  const isDirectVideo = embedUrl && embedUrl.match(/\.(mp4|webm|ogg)$/i);
+
+  // If there's a valid video URL, show embedded player
+  if (embedUrl) {
+    return (
+      <div className="w-full bg-black rounded-xl overflow-hidden shadow-2xl">
+        <div className="relative aspect-video">
+          {isDirectVideo ? (
+            // Direct video file
+            <video
+              className="w-full h-full"
+              controls
+              controlsList="nodownload"
+              preload="metadata"
+            >
+              <source src={embedUrl} type="video/mp4" />
+              Your browser does not support the video tag.
+            </video>
+          ) : (
+            // Embedded iframe (YouTube, Vimeo, etc.)
+            <iframe
+              src={embedUrl}
+              className="w-full h-full"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              title={title}
+            />
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Fallback: Mock player if no video URL
   return (
     <div className="w-full bg-black rounded-xl overflow-hidden shadow-2xl">
       {/* Video viewport */}
@@ -52,95 +122,58 @@ function VideoPlayer({ title, duration }: { title: string; duration: number }) {
           }}
         />
 
-        {/* Center play button */}
-        <button
-          onClick={() => setPlaying((p) => !p)}
-          className="relative z-10 w-20 h-20 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center transition-all duration-200 hover:scale-110 hover:bg-white/20 active:scale-95"
-          aria-label={playing ? "Pause" : "Play"}
-        >
-          {playing ? (
-            <div className="flex gap-1.5">
-              <span className="w-3 h-8 rounded-sm bg-white" />
-              <span className="w-3 h-8 rounded-sm bg-white" />
-            </div>
-          ) : (
-            <svg viewBox="0 0 24 24" fill="white" className="w-8 h-8 ml-1">
+        {/* No video message */}
+        <div className="relative z-10 text-center space-y-3 px-4">
+          <div className="w-20 h-20 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center mx-auto">
+            <svg viewBox="0 0 24 24" fill="white" className="w-8 h-8">
               <path d="M8 5v14l11-7z" />
             </svg>
-          )}
-        </button>
-
-        {/* Lesson title overlay */}
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-          <p className="text-white text-sm font-medium truncate">{title}</p>
+          </div>
+          <p className="text-white/60 text-sm">No video available for this lesson</p>
         </div>
 
-        {/* Playing indicator */}
-        {playing && (
-          <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-red-500 rounded px-2 py-0.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-            <span className="text-white text-xs font-medium">LIVE</span>
-          </div>
-        )}
+        {/* Lesson title overlay */}
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
+          <p className="text-white text-sm font-medium truncate">{title}</p>
+        </div>
       </div>
 
-      {/* Controls bar */}
-      <div className="bg-zinc-900 px-4 py-3 space-y-2">
+      {/* Controls bar (disabled when no video) */}
+      <div className="bg-zinc-900 px-4 py-3 space-y-2 opacity-50">
         {/* Scrubber */}
-        <div
-          className="w-full h-1.5 bg-zinc-700 rounded-full cursor-pointer relative group/scrub"
-          onClick={handleScrub}
-        >
-          <div
-            className="h-full bg-primary rounded-full transition-all relative"
-            style={{ width: `${progress * 100}%` }}
-          >
-            <span className="absolute right-0 top-1/2 -translate-y-1/2 w-3 h-3 rounded-full bg-primary scale-0 group-hover/scrub:scale-100 transition-transform" />
-          </div>
+        <div className="w-full h-1.5 bg-zinc-700 rounded-full relative">
+          <div className="h-full bg-zinc-600 rounded-full w-0" />
         </div>
 
         {/* Bottom row */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <button
-              onClick={() => setPlaying((p) => !p)}
-              className="text-zinc-400 hover:text-white transition-colors"
-            >
-              {playing ? (
-                <div className="flex gap-0.5">
-                  <span className="w-1 h-3.5 rounded-sm bg-current" />
-                  <span className="w-1 h-3.5 rounded-sm bg-current" />
-                </div>
-              ) : (
-                <svg
-                  viewBox="0 0 24 24"
-                  fill="currentColor"
-                  className="w-4 h-4 ml-0.5"
-                >
-                  <path d="M8 5v14l11-7z" />
-                </svg>
-              )}
-            </button>
+            <div className="text-zinc-400">
+              <svg
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="w-4 h-4 ml-0.5"
+              >
+                <path d="M8 5v14l11-7z" />
+              </svg>
+            </div>
             <span className="text-zinc-400 text-xs tabular-nums">
-              {Math.round(progress * (duration || 600))}s /{" "}
-              {formatDuration(duration) !== "—"
-                ? formatDuration(duration)
-                : "—"}
+              0s / {formatDuration(duration) !== "—" ? formatDuration(duration) : "—"}
             </span>
           </div>
 
           {/* Volume + fullscreen mock */}
           <div className="flex items-center gap-3">
-            <button className="text-zinc-400 hover:text-white transition-colors">
+            <div className="text-zinc-400">
               <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
                 <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 7.97v8.05c1.48-.73 2.5-2.25 2.5-4.02z" />
               </svg>
-            </button>
-            <button className="text-zinc-400 hover:text-white transition-colors">
+            </div>
+            <div className="text-zinc-400">
               <svg viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4">
                 <path d="M7 14H5v5h5v-2H7v-3zm-2-4h2V7h3V5H5v5zm12 7h-3v2h5v-5h-2v3zM14 5v2h3v3h2V5h-5z" />
               </svg>
-            </button>
+            </div>
           </div>
         </div>
       </div>
@@ -298,6 +331,7 @@ export default function LessonPlayerContent({
             <VideoPlayer
               title={data.lesson.title}
               duration={data.lesson.duration}
+              videoUrl={data.lesson.videoUrl}
             />
 
             {/* Lesson header + actions */}

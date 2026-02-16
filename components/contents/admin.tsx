@@ -110,6 +110,11 @@ export default function AdminContent() {
   const [users, setUsers] = useState<AdminUserItem[]>([]);
   const [userSearchQuery, setUserSearchQuery] = useState("");
   const [deletingCourseId, setDeletingCourseId] = useState<string | null>(null);
+  const [courseToForceDelete, setCourseToForceDelete] = useState<{
+    id: string;
+    title: string;
+    enrollmentCount: number;
+  } | null>(null);
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedRole, setSelectedRole] = useState<"ADMIN" | "STUDENT">(
@@ -118,17 +123,34 @@ export default function AdminContent() {
   const [deletingUserId, setDeletingUserId] = useState<string | null>(null);
   useState<EnrollmentTrendByCourse | null>(null);
 
-  const handleDeleteCourse = async (courseId: string) => {
+  const handleDeleteCourse = async (courseId: string, force: boolean = false) => {
     try {
       setDeletingCourseId(courseId);
-      const result = await deleteCourse(courseId);
+      const result = await deleteCourse(courseId, force);
 
       if (!result.success) {
+        // Check if this is an enrollment error (needs force deletion)
+        if (result.error.includes("student")) {
+          // Find the course to get its details
+          const course = courses.find((c) => c.id === courseId);
+          if (course && course.enrollmentCount > 0) {
+            setCourseToForceDelete({
+              id: courseId,
+              title: course.title,
+              enrollmentCount: course.enrollmentCount,
+            });
+            setDeletingCourseId(null);
+            return result;
+          }
+        }
+        // For other errors, show toast
         toast.error(result.error);
-        return;
+        setDeletingCourseId(null);
+        return result;
       }
 
       toast.success("Course deleted successfully!");
+      setCourseToForceDelete(null);
       // Refresh the courses list and stats so the stats cards reflect the deletion
       const [list, newStats] = await Promise.all([
         getAdminCourses(),
@@ -136,9 +158,11 @@ export default function AdminContent() {
       ]);
       setCourses(list);
       setStats(newStats);
+      return result;
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error) {
       toast.error("Failed to delete course");
+      return { success: false, error: "Failed to delete course" };
     } finally {
       setDeletingCourseId(null);
     }
@@ -508,6 +532,13 @@ export default function AdminContent() {
                                     {course.title}&quot;? This action cannot be
                                     undone and will remove all course content,
                                     sections, and lessons.
+                                    {course.enrollmentCount > 0 && (
+                                      <span className="block mt-2 font-semibold text-destructive">
+                                        Warning: {course.enrollmentCount} student
+                                        {course.enrollmentCount === 1 ? " is" : "s are"}{" "}
+                                        currently enrolled in this course.
+                                      </span>
+                                    )}
                                   </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
@@ -530,6 +561,53 @@ export default function AdminContent() {
                 </TableBody>
               </Table>
             </TabsContent>
+
+            {/* Force Delete Warning Dialog */}
+            <AlertDialog 
+              open={courseToForceDelete !== null} 
+              onOpenChange={(open) => !open && setCourseToForceDelete(null)}
+            >
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="text-destructive">
+                    ⚠️ Students Enrolled in Course
+                  </AlertDialogTitle>
+                  <AlertDialogDescription>
+                    <span className="block mb-2">
+                      <strong>{courseToForceDelete?.enrollmentCount}</strong> student
+                      {courseToForceDelete?.enrollmentCount === 1 ? " is" : "s are"}{" "}
+                      currently enrolled in &quot;{courseToForceDelete?.title}&quot;.
+                    </span>
+                    <span className="block mb-2">
+                      Deleting this course will:
+                    </span>
+                    <ul className="list-disc list-inside space-y-1 ml-2 mb-2">
+                      <li>Remove all student enrollments</li>
+                      <li>Delete all course content and progress</li>
+                      <li>Cannot be undone</li>
+                    </ul>
+                    <span className="block font-semibold text-destructive">
+                      Are you sure you want to proceed?
+                    </span>
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel onClick={() => setCourseToForceDelete(null)}>
+                    Cancel
+                  </AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={() => {
+                      if (courseToForceDelete) {
+                        handleDeleteCourse(courseToForceDelete.id, true);
+                      }
+                    }}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    Yes, Delete Anyway
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
 
             {/* Users Tab */}
             <TabsContent value="users" className="space-y-4">

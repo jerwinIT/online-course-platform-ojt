@@ -271,7 +271,6 @@ export default function CourseDetailContent({
     totalMinutes,
     totalEnrollments,
     category,
-    instructor,
     sections,
     isAuthenticated,
     isEnrolled,
