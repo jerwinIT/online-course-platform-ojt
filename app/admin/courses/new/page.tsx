@@ -677,7 +677,7 @@ export default function CreateCoursePage() {
             <ArrowLeft className="w-4 h-4" />
             Back to Courses
           </Link>
-          <h1 className="text-3xl font-bold">Create New Course</h1>
+          <h1 className="text-3xl font-bold text-[#d72323]">Create New Course</h1>
           <p className="text-muted-foreground mt-1">
             Build your course step by step
           </p>
