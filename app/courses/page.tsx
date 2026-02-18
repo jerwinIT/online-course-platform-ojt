@@ -11,7 +11,7 @@ export default async function CoursesPage() {
       <div className="min-h-screen bg-background flex flex-col">
         <section className="bg-secondary border-b border-border py-12">
           <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
-            <h1 className="text-4xl sm:text-5xl font-bold text-foreground mb-4">
+            <h1 className="text-4xl sm:text-5xl font-bold text-[#d72323] mb-4">
               Explore Courses
             </h1>
             <p className="text-lg text-muted-foreground">
@@ -40,7 +40,7 @@ export default async function CoursesPage() {
       <section className="bg-secondary border-b border-border py-8 sm:py-12 lg:py-16 px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="max-w-3xl space-y-4 lg:space-y-6">
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-gray-900 leading-[1.1]">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-[#d72323] leading-[1.1]">
               Explore Courses
             </h1>
             <p className="text-base sm:text-lg lg:text-xl leading-relaxed text-gray-700">

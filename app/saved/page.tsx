@@ -26,7 +26,7 @@ export default async function SavedCoursesPage() {
         <section className="bg-secondary border-b border-border py-8 sm:py-12 lg:py-16 px-4 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-7xl">
             <div className="max-w-3xl space-y-4 lg:space-y-6">
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-gray-900 leading-[1.1]">
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-[#d72323] leading-[1.1]">
                 Saved Courses
               </h1>
               <p className="text-base sm:text-lg lg:text-xl leading-relaxed text-gray-700">
@@ -59,7 +59,7 @@ export default async function SavedCoursesPage() {
       <section className="bg-secondary border-b border-border py-8 sm:py-12 lg:py-16 px-4 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="max-w-3xl space-y-4 lg:space-y-6">
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-gray-900 leading-[1.1]">
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-[#d72323] leading-[1.1]">
               Saved Courses
             </h1>
             <p className="text-base sm:text-lg lg:text-xl leading-relaxed text-gray-700">

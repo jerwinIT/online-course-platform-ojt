@@ -48,7 +48,7 @@ export default function HomePage({ courses, categories }: HomePageProps) {
           <div className="max-w-3xl space-y-8 lg:space-y-10">
             <Badge className="text-sm">Your School&apos;s Learning Hub</Badge>
 
-            <h1 className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-extrabold tracking-tight text-gray-900 leading-[1.1]">
+            <h1 className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-extrabold tracking-tight text-[#d72323] leading-[1.1]">
               Explore. <span className="relative z-10">Learn.</span>
               <br />
               Grow.
@@ -82,7 +82,7 @@ export default function HomePage({ courses, categories }: HomePageProps) {
                 className="flex items-center gap-3 rounded-2xl border border-gray-200 bg-white px-6 py-4 lg:px-8 lg:py-5 shadow-sm hover:shadow-md transition-shadow"
               >
                 <div>
-                  <p className="text-lg lg:text-xl font-bold text-gray-900">
+                  <p className="text-lg lg:text-xl font-bold text-[#d72323]">
                     {stat.value}
                   </p>
                   <p className="text-sm lg:text-base text-gray-500">{stat.label}</p>
@@ -98,7 +98,7 @@ export default function HomePage({ courses, categories }: HomePageProps) {
         <div className="mx-auto max-w-7xl">
           <div className="flex items-end justify-between mb-10">
             <div>
-              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-4">
+              <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#d72323] mb-4">
                 Browse by Category
               </h2>
               <p className="text-muted-foreground text-lg lg:text-xl">
@@ -114,14 +114,14 @@ export default function HomePage({ courses, categories }: HomePageProps) {
               </Link>
             )}
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 lg:gap-6">
-            {categories.slice(0, 6).map(({ name, slug }) => (
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 lg:gap-6">
+            {categories.slice(0, 5).map(({ name, slug }) => (
               <Link
                 key={slug}
                 href={`/courses?category=${slug}`}
                 className="h-full"
               >
-                <div className="group flex h-full items-center justify-center rounded-lg border border-gray-200 bg-primary/5 px-4 py-8 lg:py-10 text-center hover:border-primary/40 hover:bg-primary transition-all duration-200">
+                <div className="group flex h-full items-center justify-center rounded-lg border border-gray-200 bg-[#EEEEEE] px-4 py-8 lg:py-10 text-center hover:border-primary/40 hover:bg-[#28A745] transition-all duration-200">
                   <span className="text-sm sm:text-base lg:text-lg font-semibold text-primary group-hover:text-white transition-colors">
                     {name}
                   </span>
@@ -136,8 +136,8 @@ export default function HomePage({ courses, categories }: HomePageProps) {
       <section className="px-4 py-20 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="mb-12">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-foreground mb-4">
-              Recently
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#d72323] mb-4">
+              Recently Added Courses
             </h2>
             <p className="text-muted-foreground text-lg lg:text-xl">
               Start learning from our available courses
@@ -174,7 +174,6 @@ export default function HomePage({ courses, categories }: HomePageProps) {
                             {course.title}
                           </CardTitle>
                           <Badge
-                            variant="outline"
                             className="whitespace-nowrap"
                           >
                             {course.category.name}
@@ -232,7 +231,7 @@ export default function HomePage({ courses, categories }: HomePageProps) {
       <section className="border-y border-gray-200 bg-white px-4 py-20 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="mb-14 max-w-2xl">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 text-foreground">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 text-[#d72323]">
               Made for Students
             </h2>
             <p className="text-muted-foreground text-lg lg:text-xl">
@@ -262,11 +261,11 @@ export default function HomePage({ courses, categories }: HomePageProps) {
               const Icon = feature.icon;
               return (
                 <div key={i} className="flex gap-4">
-                  <div className="mt-1 flex-shrink-0 flex items-center justify-center w-12 h-12 rounded-xl bg-primary/10">
-                    <Icon className="w-6 h-6 text-primary" />
+                  <div className="mt-1 flex-shrink-0 flex items-center justify-center w-12 h-12 rounded-xl bg-[#d72323]">
+                    <Icon className="w-6 h-6 text-white" />
                   </div>
                   <div>
-                    <h3 className="text-lg lg:text-xl font-semibold mb-2">
+                    <h3 className="text-lg lg:text-xl text-[#d72323] font-semibold mb-2">
                       {feature.title}
                     </h3>
                     <p className="text-muted-foreground text-base leading-relaxed">
@@ -284,7 +283,7 @@ export default function HomePage({ courses, categories }: HomePageProps) {
       <section className="border-y border-gray-200 px-4 py-20 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl flex flex-col sm:flex-row items-center justify-between gap-8 lg:gap-12">
           <div className="flex-1">
-            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 text-foreground">
+            <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 text-[#d72323]">
               Ready to start learning?
             </h2>
             <p className="text-muted-foreground text-lg lg:text-xl">
@@ -295,7 +294,6 @@ export default function HomePage({ courses, categories }: HomePageProps) {
           <Link href="/courses">
             <Button
               size="lg"
-              className="gap-2 bg-gray-900 hover:bg-gray-700 text-white rounded-xl px-10 py-7 text-base lg:text-lg shadow-md whitespace-nowrap"
             >
               Go to Courses <ArrowRight className="w-5 h-5" />
             </Button>

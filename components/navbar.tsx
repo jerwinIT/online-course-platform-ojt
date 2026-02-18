@@ -40,18 +40,18 @@ export default function Navbar() {
   }
 
   return (
-    <nav className="border-b border-border bg-background sticky top-0 z-50 px-4 sm:px-6 lg:px-8">
+    <nav className="border-b border-border bg-[#343A40] sticky top-0 z-50 px-4 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <div className="flex items-center justify-between h-16 lg:h-20">
           {/* Logo */}
           <Link
             href="/"
-            className="flex items-center gap-2 font-bold text-xl lg:text-2xl text-foreground"
+            className="flex items-center gap-2 font-bold text-foreground"
           >
-            <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-lg bg-primary flex items-center justify-center">
-              <BookOpen className="w-5 h-5 lg:w-6 lg:h-6 text-primary-foreground" />
+            <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-lg bg-[#d72323] flex items-center justify-center">
+              <BookOpen className="w-5 h-5 lg:w-6 lg:h-6 text-white" />
             </div>
-            LearnHub
+            <p className="text-xl lg:text-2xl text-white">LearnHub</p>
           </Link>
 
           {/* Desktop Navigation */}
@@ -59,10 +59,10 @@ export default function Navbar() {
             {isAuthenticated && (
               <Link
                 href={dashboardHref}
-                className={`transition-colors border-b-2 text-base lg:text-lg font-medium ${
+                className={`transition-colors text-base lg:text-lg font-medium ${
                   isDashboardActive
-                    ? "text-primary border-primary"
-                    : "text-foreground border-transparent hover:text-primary"
+                    ? "text-[#d72323]"
+                    : "text-white hover:text-[#d72323]"
                 }`}
               >
                 {dashboardLabel}
@@ -70,10 +70,10 @@ export default function Navbar() {
             )}
             <Link
               href="/courses"
-              className={`transition-colors border-b-2 text-base lg:text-lg font-medium ${
+              className={`transition-colors text-base lg:text-lg font-medium ${
                 pathname.startsWith("/courses")
-                  ? "text-primary border-primary"
-                  : "text-foreground border-transparent hover:text-primary"
+                  ? "text-[#d72323]"
+                  : "text-white hover:text-[#d72323]"
               }`}
             >
               Courses
@@ -85,16 +85,15 @@ export default function Navbar() {
             {isAuthenticated ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="rounded-full relative overflow-hidden w-10 h-10 lg:w-12 lg:h-12">
-                    {session?.user?.image ? ( // ✅ correct source
+                  <Button variant="ghost" size="icon" className="rounded-full relative overflow-hidden w-10 h-10 lg:w-12 lg:h-12 hover:ring-2 hover:ring-[#d72323]">
+                    {session?.user?.image ? (
                       <Image
                         src={session.user.image}
                         alt={session.user.name ?? "User avatar"}
                         fill
-                     
                       />
                     ) : (
-                      <CircleUser className="w-6 h-6 lg:w-7 lg:h-7" />
+                      <CircleUser className="w-6 h-6 lg:w-7 lg:h-7 text-white" />
                     )}
                   </Button>
                 </DropdownMenuTrigger>
@@ -140,24 +139,19 @@ export default function Navbar() {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <>
-                {/* <img src="/google.svg" alt="Google" className="w-5 h-5" /> */}
-                <Button
-                  onClick={() =>
-                    signIn("google", { callbackUrl: "/dashboard" })
-                  }
-                  className="text-sm lg:text-base px-4 lg:px-6 py-2 lg:py-2.5"
-                >
-                  Continue with Gsuite
-                </Button>
-              </>
+              <Button
+                onClick={() => signIn("google", { callbackUrl: "/dashboard" })}
+                className="text-sm lg:text-base px-4 lg:px-6 py-2 lg:py-2.5"
+              >
+                Continue with Gsuite
+              </Button>
             )}
           </div>
 
           {/* Mobile Menu Button */}
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="md:hidden p-2 hover:bg-secondary rounded-lg transition"
+            className="md:hidden p-2 hover:bg-[#d72323]/20 rounded-lg transition text-white"
           >
             {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
@@ -171,8 +165,8 @@ export default function Navbar() {
                 href={dashboardHref}
                 className={`block px-4 py-2 rounded-lg transition ${
                   isDashboardActive
-                    ? "bg-primary/10 text-primary font-medium"
-                    : "text-foreground hover:bg-secondary"
+                    ? "bg-[#d72323]/20 text-[#d72323] font-medium"
+                    : "text-white hover:bg-[#d72323]/10 hover:text-[#d72323]"
                 }`}
                 onClick={() => setIsOpen(false)}
               >
@@ -183,8 +177,8 @@ export default function Navbar() {
               href="/courses"
               className={`block px-4 py-2 rounded-lg transition ${
                 pathname.startsWith("/courses")
-                  ? "bg-primary/10 text-primary font-medium"
-                  : "text-foreground hover:bg-secondary"
+                  ? "bg-[#d72323]/20 text-[#d72323] font-medium"
+                  : "text-white hover:bg-[#d72323]/10 hover:text-[#d72323]"
               }`}
               onClick={() => setIsOpen(false)}
             >
@@ -195,26 +189,26 @@ export default function Navbar() {
               {isAuthenticated ? (
                 <>
                   <div className="px-4 py-2 text-sm text-muted-foreground border-b border-border">
-                    <p className="font-medium text-foreground">
+                    <p className="font-medium text-white">
                       {session?.user?.name ?? "User"}
                     </p>
-                    <p className="text-xs truncate">{session?.user?.email}</p>
+                    <p className="text-xs truncate text-white/60">{session?.user?.email}</p>
                   </div>
                   <Link href={dashboardHref} onClick={() => setIsOpen(false)}>
-                    <Button variant="outline" className="w-full bg-transparent">
+                    <Button variant="outline" className="w-full bg-transparent text-white border-white/20 hover:border-[#d72323] hover:text-[#d72323]">
                       <LayoutDashboard className="w-4 h-4" />
                       {dashboardLabel}
                     </Button>
                   </Link>
                   <Link href="/saved" onClick={() => setIsOpen(false)}>
-                    <Button variant="outline" className="w-full bg-transparent">
+                    <Button variant="outline" className="w-full bg-transparent text-white border-white/20 hover:border-[#d72323] hover:text-[#d72323]">
                       <Heart className="w-4 h-4" />
                       Saved
                     </Button>
                   </Link>
                   <Button
                     variant="outline"
-                    className="w-full bg-transparent text-destructive hover:text-destructive"
+                    className="w-full bg-transparent text-destructive border-white/20 hover:text-destructive hover:border-destructive"
                     onClick={() => {
                       setIsOpen(false);
                       handleSignOut();
@@ -225,17 +219,15 @@ export default function Navbar() {
                   </Button>
                 </>
               ) : (
-                <>
-                  <Button
-                    className="w-full"
-                    onClick={() => {
-                      setIsOpen(false);
-                      signIn("google", { callbackUrl: "/dashboard" });
-                    }}
-                  >
-                    Continue with Gsuite
-                  </Button>
-                </>
+                <Button
+                  className="w-full"
+                  onClick={() => {
+                    setIsOpen(false);
+                    signIn("google", { callbackUrl: "/dashboard" });
+                  }}
+                >
+                  Continue with Gsuite
+                </Button>
               )}
             </div>
           </div>

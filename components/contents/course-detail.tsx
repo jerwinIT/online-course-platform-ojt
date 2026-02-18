@@ -299,7 +299,7 @@ export default function CourseDetailContent({
             <div className="lg:col-span-2 space-y-6">
               <div className="space-y-3">
                 <Badge className="w-fit text-sm">{category.name}</Badge>
-                <h1 className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-extrabold tracking-tight text-gray-900 leading-[1.1]">
+                <h1 className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-extrabold tracking-tight text-[#d72323] leading-[1.1]">
                   {title}
                 </h1>
                 {subtitle && (
@@ -405,7 +405,7 @@ export default function CourseDetailContent({
         <div className="mx-auto max-w-7xl space-y-12 lg:space-y-16">
           {/* About */}
           <div>
-            <h2 className="text-2xl lg:text-3xl font-bold text-foreground mb-4 lg:mb-6">
+            <h2 className="text-2xl lg:text-3xl font-bold text-[#d72323] mb-4 lg:mb-6">
               About this course
             </h2>
             <p className="text-base lg:text-lg text-muted-foreground leading-relaxed whitespace-pre-line">
@@ -416,21 +416,21 @@ export default function CourseDetailContent({
           {/* Quick Stats */}
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 lg:gap-6">
             <div className="rounded-lg border border-border p-4 lg:p-6 text-center space-y-1 lg:space-y-2">
-              <Users className="w-6 h-6 lg:w-8 lg:h-8 text-primary mx-auto" />
+              <Users className="w-6 h-6 lg:w-8 lg:h-8 text-[#28a745] mx-auto" />
               <p className="font-bold text-lg lg:text-2xl text-foreground">
                 {totalEnrollments.toLocaleString()}
               </p>
               <p className="text-xs lg:text-sm text-muted-foreground">Students</p>
             </div>
             <div className="rounded-lg border border-border p-4 lg:p-6 text-center space-y-1 lg:space-y-2">
-              <BookOpen className="w-6 h-6 lg:w-8 lg:h-8 text-primary mx-auto" />
+              <BookOpen className="w-6 h-6 lg:w-8 lg:h-8 text-[#28a745] mx-auto" />
               <p className="font-bold text-lg lg:text-2xl text-foreground">
                 {totalLessons}
               </p>
               <p className="text-xs lg:text-sm text-muted-foreground">Lessons</p>
             </div>
             <div className="rounded-lg border border-border p-4 lg:p-6 text-center space-y-1 lg:space-y-2 col-span-2 sm:col-span-1">
-              <Clock className="w-6 h-6 lg:w-8 lg:h-8 text-primary mx-auto" />
+              <Clock className="w-6 h-6 lg:w-8 lg:h-8 text-[#28a745] mx-auto" />
               <p className="font-bold text-lg lg:text-2xl text-foreground">
                 {displayDuration}
               </p>
@@ -441,7 +441,7 @@ export default function CourseDetailContent({
           {/* Curriculum */}
           <div>
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 lg:mb-8 gap-3">
-              <h2 className="text-2xl lg:text-3xl font-bold text-foreground">
+              <h2 className="text-2xl lg:text-3xl font-bold text-[#d72323]">
                 Course Curriculum
               </h2>
               <p className="text-sm lg:text-base text-muted-foreground">

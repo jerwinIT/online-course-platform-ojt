@@ -185,7 +185,7 @@ export default function CoursesClient({ courses }: CoursesClientProps) {
                         <CardTitle className="line-clamp-2 flex-1">
                           {course.title}
                         </CardTitle>
-                        <Badge variant="outline" className="whitespace-nowrap">
+                        <Badge className="whitespace-nowrap">
                           {course.category.name}
                         </Badge>
                       </div>

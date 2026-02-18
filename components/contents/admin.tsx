@@ -256,7 +256,7 @@ export default function AdminContent() {
       <section className="bg-secondary border-b border-border py-8 sm:py-12 lg:py-16 px-4 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-7xl">
             <div className="max-w-3xl space-y-4 lg:space-y-6">
-              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-gray-900 leading-[1.1]">
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-[#d72323] leading-[1.1]">
                 Admin Dashboard
               </h1>
               <p className="text-base sm:text-lg lg:text-xl leading-relaxed text-gray-700">
@@ -283,7 +283,7 @@ export default function AdminContent() {
                     </p>
                   </div>
                   <div className="w-12 h-12 rounded-lg flex items-center justify-center">
-                    <BookOpen className="w-6 h-6 text-primary" />
+                    <BookOpen className="w-6 h-6 text-[#28a745]" />
                   </div>
                 </div>
               </CardContent>
@@ -301,7 +301,7 @@ export default function AdminContent() {
                     </p>
                   </div>
                   <div className="w-12 h-12 rounded-lg bg-accent/10 flex items-center justify-center">
-                    <Users className="w-6 h-6 text-primary" />
+                    <Users className="w-6 h-6 text-[#28a745]" />
                   </div>
                 </div>
               </CardContent>
@@ -319,7 +319,7 @@ export default function AdminContent() {
                     </p>
                   </div>
                   <div className="w-12 h-12 rounded-lg flex items-center justify-center">
-                    <BarChart3 className="w-6 h-6 text-primary" />
+                    <BarChart3 className="w-6 h-6 text-[#28a745]" />
                   </div>
                 </div>
               </CardContent>
@@ -429,7 +429,7 @@ export default function AdminContent() {
             {/* Courses Tab */}
             <TabsContent value="courses" className="space-y-4">
               <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-foreground">
+                <h2 className="text-2xl font-bold text-[#d72323]">
                   Manage Courses
                 </h2>
                 <Link href="/admin/courses/new">
@@ -611,7 +611,7 @@ export default function AdminContent() {
             {/* Users Tab */}
             <TabsContent value="users" className="space-y-4">
               <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center justify-between mb-6">
-                <h2 className="text-2xl font-bold text-foreground">
+                <h2 className="text-2xl font-bold text-[#d72323]">
                   Manage Users
                 </h2>
                 <Button variant="outline" size="sm">
