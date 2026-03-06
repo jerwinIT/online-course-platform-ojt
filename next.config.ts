@@ -7,6 +7,7 @@ const nextConfig: NextConfig = {
       "lh3.googleusercontent.com",
       "cdn.example.com",
       "images.unsplash.com",
+      "plus.unsplash.com"
     ],
   },
 };
